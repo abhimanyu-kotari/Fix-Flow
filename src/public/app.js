@@ -10,6 +10,9 @@ let state = {
   customerToken: localStorage.getItem('ff_cust_token') || '',
   workspace: null,
   subscription: null,
+  repairerProfile: null,
+  customerProfile: null,
+  customerTicketCount: 0,
   tickets: [],
   staff: [],
   customers: [],
@@ -49,6 +52,21 @@ function showToast(message, type = 'info') {
   }, 4500);
 }
 
+function toggleHeaderProfileMenu(menuId) {
+  const menu = document.getElementById(menuId);
+  if (!menu) return;
+
+  document.querySelectorAll('[id$="-profile-menu"]').forEach(otherMenu => {
+    if (otherMenu !== menu) otherMenu.classList.add('hidden');
+  });
+  menu.classList.toggle('hidden');
+}
+
+document.addEventListener('click', event => {
+  if (event.target.closest('[data-profile-menu-trigger]')) return;
+  document.querySelectorAll('[id$="-profile-menu"]').forEach(menu => menu.classList.add('hidden'));
+});
+
 // Password visibility reveal toggle
 function togglePasswordVisibility(inputId, btnEl) {
   const input = document.getElementById(inputId);
@@ -70,6 +88,15 @@ function switchPortal(portal) {
   const custAuth = document.getElementById('cust-auth-hero');
   const leftTitle = document.getElementById('left-banner-title');
   const leftSubtitle = document.getElementById('left-banner-subtitle');
+  const authCard = document.getElementById('gateway-auth-card');
+  const leftColumn = document.getElementById('gateway-left-column');
+  const rightColumn = document.getElementById('gateway-right-column');
+  const visual = document.getElementById('gateway-visual');
+  const leftContent = document.getElementById('gateway-left-content');
+  const leftFooter = document.getElementById('gateway-left-footer');
+  const leftBrand = document.getElementById('gateway-left-brand');
+  const portalSelector = document.getElementById('gateway-portal-selector');
+  const socialActions = document.getElementById('gateway-social-actions');
 
   if (portal === 'shop') {
     if (btnShop) {
@@ -91,10 +118,42 @@ function switchPortal(portal) {
         <span>Track Repair</span>
       `;
     }
-    if (shopAuth) shopAuth.classList.remove('hidden');
+    if (shopAuth) {
+      shopAuth.classList.remove('hidden');
+      leftColumn?.insertBefore(shopAuth, leftFooter);
+      shopAuth.classList.add('pt-2');
+    }
     if (custAuth) custAuth.classList.add('hidden');
+    if (authCard) authCard.className = 'max-w-5xl mx-auto bg-white rounded-[36px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] overflow-hidden grid grid-cols-1 md:grid-cols-12 relative z-10 border border-neutral-800/20';
+    if (authCard) authCard.style.gridTemplateColumns = window.innerWidth >= 768 ? '35% 65%' : '';
+    if (leftColumn) {
+      leftColumn.className = 'p-6 sm:p-8 flex flex-col justify-center border-b md:border-b-0 md:border-r border-slate-100 bg-white relative transition-all duration-500';
+      leftColumn.style.gridColumn = '1';
+    }
+    if (rightColumn) {
+      rightColumn.className = 'p-0 flex flex-col justify-between bg-white transition-all duration-500 overflow-hidden';
+      rightColumn.style.gridColumn = '2';
+    }
+    if (leftContent) leftContent.classList.add('hidden');
+    if (leftFooter) leftFooter.classList.add('hidden');
+    if (leftBrand) leftBrand.classList.add('hidden');
+    if (portalSelector) leftColumn?.prepend(portalSelector);
+    if (socialActions) socialActions.classList.add('hidden');
+    const oldTitle = document.getElementById('auth-main-title');
+    if (oldTitle) oldTitle.textContent = 'Manage repairs faster';
+    const oldSubtitle = document.getElementById('auth-main-subtitle');
+    if (oldSubtitle) oldSubtitle.textContent = 'Build trust with everyone.';
+    if (visual) rightColumn?.appendChild(visual);
+    visual?.classList.remove('min-h-[520px]');
+    visual?.classList.add('min-h-[520px]');
+    visual?.classList.remove('hidden');
     if (leftTitle) leftTitle.textContent = 'Welcome';
-    if (leftSubtitle) leftSubtitle.textContent = "Don't have an account? Create your account, it takes less than a minute.";
+    if (leftSubtitle) leftSubtitle.textContent = 'Manage repairs faster, build trust with everyone.';
+    const visualImage = document.getElementById('gateway-visual-image');
+    if (visualImage) {
+      visualImage.src = '/images/hero-shop.jpg';
+      visualImage.alt = 'Electronics repair shop';
+    }
   } else {
     if (btnTrack) {
       btnTrack.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-black text-white shadow-xs';
@@ -115,13 +174,61 @@ function switchPortal(portal) {
         <span>Shop Portal</span>
       `;
     }
-    if (custAuth) custAuth.classList.remove('hidden');
+    if (custAuth) {
+      custAuth.classList.remove('hidden');
+      rightColumn?.insertBefore(custAuth, visual);
+    }
     if (shopAuth) shopAuth.classList.add('hidden');
+    if (authCard) authCard.className = 'max-w-5xl mx-auto bg-white rounded-[36px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] overflow-hidden grid grid-cols-1 md:grid-cols-12 relative z-10 border border-neutral-800/20';
+    if (authCard) authCard.style.gridTemplateColumns = window.innerWidth >= 768 ? '65% 35%' : '';
+    if (leftColumn) {
+      leftColumn.className = 'p-0 flex flex-col justify-between bg-slate-950 relative transition-all duration-500 overflow-hidden';
+      leftColumn.style.gridColumn = '1';
+    }
+    if (rightColumn) {
+      rightColumn.className = 'p-8 sm:p-8 flex flex-col justify-center bg-white transition-all duration-500 overflow-hidden';
+      rightColumn.style.gridColumn = '2';
+    }
+    if (leftContent) leftContent.classList.add('hidden');
+    if (leftFooter) leftFooter.classList.add('hidden');
+    if (leftBrand) leftBrand.classList.add('hidden');
+    if (portalSelector) rightColumn?.prepend(portalSelector);
+    if (socialActions) socialActions.classList.add('hidden');
+    if (visual) leftColumn?.appendChild(visual);
+    visual?.classList.remove('hidden');
+    visual?.classList.add('min-h-[520px]');
+    if (custAuth) {
+      custAuth.classList.remove('hidden');
+      custAuth.classList.add('space-y-5');
+    }
     if (leftTitle) leftTitle.textContent = 'Track Device';
     if (leftSubtitle) leftSubtitle.textContent = 'Real-time repair tracking with zero passwords. Just enter your mobile number.';
+    const visualImage = document.getElementById('gateway-visual-image');
+    if (visualImage) {
+      visualImage.src = '/images/hero-track.jpg';
+      visualImage.alt = 'Customer discussing a repair';
+    }
   }
 
   renderHeaderUserArea();
+}
+
+function handleWorkspaceBrandClick(event) {
+  if (state.currentPortal === 'shop' && state.shopToken && state.workspace) {
+    event.preventDefault();
+    toggleWorkspaceSidebar();
+  }
+}
+
+function toggleWorkspaceSidebar() {
+  const shopView = document.getElementById('shop-view-container');
+  const toggle = document.getElementById('workspace-sidebar-toggle');
+  if (!shopView) return;
+  const collapsed = shopView.classList.toggle('workspace-sidebar-collapsed');
+  if (toggle) {
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+    toggle.setAttribute('aria-label', collapsed ? 'Open workspace sidebar' : 'Close workspace sidebar');
+  }
 }
 
 function renderHeaderUserArea() {
@@ -140,69 +247,129 @@ function renderHeaderUserArea() {
     if (shopView) shopView.classList.remove('hidden');
     if (trackView) trackView.classList.add('hidden');
     
-    // Cohesive royal navy glass header
-    if (mainHeader) mainHeader.className = 'bg-[#14204F]/95 backdrop-blur-md border-b border-white/10 sticky top-0 z-40 shadow-md transition-colors duration-300';
+    if (mainHeader) mainHeader.className = 'ff-shop-header bg-black/95 backdrop-blur-md border-b border-white/10 sticky top-0 z-40 shadow-md transition-colors duration-300';
     if (landingNavLinks) landingNavLinks.classList.add('hidden');
     if (brandTitle) {
-      brandTitle.textContent = state.workspace.name || 'FixFlow';
+      brandTitle.textContent = 'Fix Flow';
       brandTitle.className = 'text-xl font-extrabold tracking-tight text-white transition-colors';
     }
     if (brandBadge) {
-      brandBadge.textContent = 'Shop Workspace';
-      brandBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30';
+      brandBadge.classList.add('hidden');
     }
     if (brandSubtitle) {
-      brandSubtitle.textContent = 'Active Repair Operations Center';
-      brandSubtitle.className = 'text-[11px] text-slate-300 -mt-0.5 font-medium';
+      brandSubtitle.classList.add('hidden');
     }
 
+    container.classList.remove('ff-shop-header-account');
     const initials = (state.workspace.name || 'WS').substring(0, 2).toUpperCase();
-    container.innerHTML = `
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 text-white font-black text-xs flex items-center justify-center border border-white/20 shadow-xs">
-            ${initials}
-          </div>
-          <div class="text-left hidden sm:block">
-            <div class="text-xs font-bold text-white">${state.workspace.name}</div>
-            <span class="text-[10px] font-semibold text-sky-200 uppercase tracking-wider">${state.workspace.role || 'Shop Staff'}</span>
-          </div>
-        </div>
-        <button onclick="shopLogout()" class="text-xs font-bold text-white/90 hover:text-white bg-white/10 hover:bg-white/20 border border-white/15 px-3 py-1.5 rounded-xl transition shadow-xs">
-          Sign Out
+    const planName = state.subscription?.currentPlan?.name || 'SaaS Workspace';
+    const repairerName = state.repairerProfile?.name || state.workspace.name || 'Shop account';
+    const repairerEmail = state.repairerProfile?.email || '';
+    const repairerRole = state.repairerProfile?.role || state.workspace.role || 'Shop staff';
+    const repairerInitials = repairerName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(part => part[0])
+      .join('')
+      .toUpperCase() || initials;
+    container.innerHTML = '';
+
+    const accountName = document.getElementById('workspace-account-name');
+    const accountAvatar = document.getElementById('workspace-account-avatar');
+    const accountPlan = document.getElementById('workspace-account-plan');
+    if (accountName) accountName.textContent = state.workspace.name || 'Shop workspace';
+    if (accountAvatar) accountAvatar.textContent = repairerInitials;
+    if (accountPlan) accountPlan.textContent = `${planName} plan`;
+
+    let profileMenu = document.getElementById('shop-profile-menu');
+    if (!profileMenu) {
+      profileMenu = document.createElement('div');
+      profileMenu.id = 'shop-profile-menu';
+      document.body.appendChild(profileMenu);
+    }
+    profileMenu.className = 'hidden customer-header-profile-menu shop-header-profile-menu';
+    profileMenu.innerHTML = `
+      <div class="shop-profile-menu-heading">
+        <span>Account</span>
+        <button type="button" aria-label="Close account menu" onclick="toggleHeaderProfileMenu('shop-profile-menu')">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg>
         </button>
       </div>
+      <div class="customer-header-profile-summary">
+        <span class="customer-header-avatar customer-header-avatar-large">${repairerInitials}</span>
+        <div>
+          <strong>${repairerName}</strong>
+          <span>${repairerEmail}</span>
+        </div>
+      </div>
+      <div class="customer-header-profile-details">
+        <div><span>Workspace</span><strong>${state.workspace.name || 'Fix Flow Shop'}</strong></div>
+        <div><span>Account role</span><strong>${repairerRole}</strong></div>
+        <div><span>Subscription</span><strong>${planName}</strong></div>
+        ${state.workspace.phone ? `<div><span>Shop phone</span><strong>${state.workspace.phone}</strong></div>` : ''}
+      </div>
+      <button type="button" onclick="openProfilePlanPanel('billing'); toggleHeaderProfileMenu('shop-profile-menu')">SaaS Plans & Billing</button>
+      <button type="button" onclick="openProfilePlanPanel('features'); toggleHeaderProfileMenu('shop-profile-menu')">Pro Features & Repair Passport</button>
+      <button type="button" onclick="shopLogout()" class="customer-header-signout">Sign out</button>
     `;
   } else if (state.currentPortal === 'track' && state.customerToken) {
     if (gateway) gateway.classList.add('hidden');
     if (trackView) trackView.classList.remove('hidden');
     if (shopView) shopView.classList.add('hidden');
     
-    // Cohesive royal navy glass header
-    if (mainHeader) mainHeader.className = 'bg-[#14204F]/95 backdrop-blur-md border-b border-white/10 sticky top-0 z-40 shadow-md transition-colors duration-300';
+    if (mainHeader) mainHeader.className = 'bg-black/95 backdrop-blur-md border-b border-white/10 sticky top-0 z-40 shadow-md transition-colors duration-300';
     if (landingNavLinks) landingNavLinks.classList.add('hidden');
     if (brandTitle) {
-      brandTitle.textContent = 'FixFlow Track';
+      brandTitle.textContent = 'Fix Flow Track';
       brandTitle.className = 'text-xl font-extrabold tracking-tight text-white transition-colors';
     }
+
     if (brandBadge) {
-      brandBadge.textContent = 'Customer Portal';
-      brandBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30';
+      brandBadge.classList.add('hidden');
     }
     if (brandSubtitle) {
-      brandSubtitle.textContent = 'Real-time Repair Milestone Tracking';
-      brandSubtitle.className = 'text-[11px] text-slate-300 -mt-0.5 font-medium';
+      brandSubtitle.classList.add('hidden');
     }
+    container.classList.remove('ff-shop-header-account');
+
+    const customerName = state.customerProfile?.name || 'Customer Account';
+    const customerPhone = state.customerProfile?.phone || 'Phone not available';
+    const customerInitials = customerName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(part => part[0])
+      .join('')
+      .toUpperCase() || 'CU';
 
     container.innerHTML = `
-      <div class="flex items-center gap-2">
-        <span class="text-xs font-semibold text-emerald-300 bg-emerald-500/20 border border-emerald-400/30 px-3 py-1 rounded-full flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Customer Verified</span>
-        </span>
-        <button onclick="customerLogout()" class="text-xs font-bold text-white/90 hover:text-white bg-white/10 hover:bg-white/20 border border-white/15 px-3 py-1.5 rounded-xl transition shadow-xs">
-          Sign Out
+      <div class="relative">
+        <button type="button" data-profile-menu-trigger onclick="toggleHeaderProfileMenu('customer-profile-menu')" aria-label="Open customer profile menu" class="customer-header-profile-trigger">
+          <span class="customer-header-avatar">${customerInitials}</span>
+          <span class="customer-header-name">${customerName}</span>
+          <svg class="customer-header-chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 8l4 4 4-4"/></svg>
         </button>
+        <div id="customer-profile-menu" class="hidden customer-header-profile-menu">
+          <div class="customer-header-profile-summary">
+            <span class="customer-header-avatar customer-header-avatar-large">${customerInitials}</span>
+            <div>
+              <strong>${customerName}</strong>
+              <span>${customerPhone}</span>
+            </div>
+          </div>
+          <div class="customer-header-profile-details">
+            <div>
+              <span>Account status</span>
+              <strong><i></i> Phone verified</strong>
+            </div>
+            <div>
+              <span>Repair records</span>
+              <strong>${state.customerTicketCount}</strong>
+            </div>
+          </div>
+          <button type="button" onclick="customerLogout()" class="customer-header-signout">Sign out</button>
+        </div>
       </div>
     `;
   } else {
@@ -217,7 +384,7 @@ function renderHeaderUserArea() {
     if (mainHeader) mainHeader.className = 'bg-black/95 backdrop-blur-md border-b border-white/10 sticky top-0 z-40 shadow-sm transition-colors duration-300';
     if (landingNavLinks) landingNavLinks.className = 'hidden md:flex items-center gap-6 text-xs font-semibold text-white/80';
     if (brandTitle) {
-      brandTitle.textContent = 'FixFlow';
+      brandTitle.textContent = 'Fix Flow';
       brandTitle.className = 'text-xl font-extrabold tracking-tight text-white transition-colors';
     }
     if (brandBadge) {
@@ -228,6 +395,11 @@ function renderHeaderUserArea() {
       brandSubtitle.textContent = 'Electronics Repair Operating System';
       brandSubtitle.className = 'text-[11px] text-neutral-400 -mt-0.5 font-medium';
     }
+    container.classList.remove('ff-shop-header-account');
+    const headerBrandContent = document.getElementById('header-brand-content');
+    const headerBrandMark = mainHeader?.querySelector('a > div:first-child');
+    if (headerBrandContent) headerBrandContent.classList.remove('hidden');
+    if (headerBrandMark) headerBrandMark.classList.remove('hidden');
 
     container.innerHTML = `
       <button onclick="document.getElementById('public-portal-gateway').scrollIntoView({behavior: 'smooth'})" class="bg-white hover:bg-slate-100 text-black font-bold text-xs px-4 py-2 rounded-xl shadow-md transition transform hover:-translate-y-0.5">
@@ -264,6 +436,9 @@ function initApplication() {
   if (state.customerToken) {
     loadCustomerDashboard();
   }
+  if (!state.shopToken && !state.customerToken) {
+    switchPortal('shop');
+  }
 }
 
 /* ========================================================
@@ -289,7 +464,7 @@ function toggleShopAuthMode(mode) {
     if (btnReg) btnReg.className = 'text-xs sm:text-sm font-bold text-black border-b-2 border-black pb-2 -mb-2.5 transition';
     if (btnLogin) btnLogin.className = 'text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-700 pb-2 -mb-2.5 transition';
     if (titleEl) titleEl.textContent = 'Create Shop Workspace';
-    if (subEl) subEl.textContent = 'Start on Free tier with unlimited repair tickets.';
+    if (subEl) subEl.textContent = 'Start on Free tier with up to 30 repair tickets per month.';
   }
 }
 
@@ -308,6 +483,7 @@ async function handleShopLogin(e) {
     if (!res.ok) throw new Error(data.error || 'Login failed');
 
     state.shopToken = data.token;
+    state.repairerProfile = data.user;
     state.workspace = { ...data.workspace, role: data.user.role };
     localStorage.setItem('ff_shop_token', data.token);
 
@@ -330,6 +506,7 @@ async function demoLogin() {
     if (res.ok) {
       const data = await res.json();
       state.shopToken = data.token;
+      state.repairerProfile = data.user;
       state.workspace = { ...data.workspace, role: data.user.role };
       localStorage.setItem('ff_shop_token', data.token);
       showToast('Logged in as Demo Shop Owner!', 'success');
@@ -355,6 +532,7 @@ async function demoLogin() {
     if (!regRes.ok) throw new Error(regData.error || 'Demo setup failed');
 
     state.shopToken = regData.token;
+    state.repairerProfile = regData.user;
     state.workspace = { ...regData.workspace, role: regData.user.role };
     localStorage.setItem('ff_shop_token', regData.token);
     showToast('Demo workspace created & logged in!', 'success');
@@ -384,6 +562,7 @@ async function handleShopRegister(e) {
     if (!res.ok) throw new Error(data.error || 'Registration failed');
 
     state.shopToken = data.token;
+    state.repairerProfile = data.user;
     state.workspace = { ...data.workspace, role: data.user.role };
     localStorage.setItem('ff_shop_token', data.token);
 
@@ -397,6 +576,7 @@ async function handleShopRegister(e) {
 
 function shopLogout() {
   state.shopToken = '';
+  state.repairerProfile = null;
   state.workspace = null;
   localStorage.removeItem('ff_shop_token');
   const wsDash = document.getElementById('shop-workspace-dashboard');
@@ -417,10 +597,12 @@ async function loadShopDashboard() {
   if (trackView) trackView.classList.add('hidden');
   const wsDash = document.getElementById('shop-workspace-dashboard');
   if (wsDash) wsDash.classList.remove('hidden');
+  switchWorkspaceTab('overview');
 
   try {
     await Promise.all([
       loadWorkspaceDetails(),
+      loadRepairerProfile(),
       loadSubscriptionDetails(),
       loadWorkspaceTickets(),
       loadWorkspaceStaff(),
@@ -442,8 +624,30 @@ async function loadWorkspaceDetails() {
 
   state.workspace = data.workspace;
   document.getElementById('ws-name-heading').textContent = data.workspace.name;
-  document.getElementById('ws-meta-subheading').textContent = `Phone: ${data.workspace.phone || 'N/A'} • Address: ${data.workspace.address || 'Address unlisted'}`;
+  const accountName = document.getElementById('workspace-account-name');
+  const accountAvatar = document.getElementById('workspace-account-avatar');
+  if (accountName) accountName.textContent = data.workspace.name || 'Shop workspace';
+  if (accountAvatar) accountAvatar.textContent = (data.workspace.name || 'WS').substring(0, 2).toUpperCase();
+  document.getElementById('ws-meta-subheading').innerHTML =
+    `<span class="inline-flex items-center gap-1.5">${data.workspace.phone || 'No phone added'}</span>` +
+    `<span class="text-white/30">•</span>` +
+    `<span class="truncate">${data.workspace.address || 'Location not added'}</span>`;
   renderHeaderUserArea();
+}
+
+async function loadRepairerProfile() {
+  if (!state.shopToken) return;
+  try {
+    const res = await fetch('/api/auth/me', {
+      headers: { Authorization: `Bearer ${state.shopToken}` }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to load profile');
+    state.repairerProfile = data.user;
+    renderHeaderUserArea();
+  } catch (_) {
+    // Existing login response remains available if profile refresh fails.
+  }
 }
 
 async function loadSubscriptionDetails() {
@@ -455,6 +659,8 @@ async function loadSubscriptionDetails() {
 
   state.subscription = data;
   const plan = data.currentPlan;
+  const accountPlan = document.getElementById('workspace-account-plan');
+  if (accountPlan) accountPlan.textContent = `${plan.name} plan`;
 
   // Plan badge
   document.getElementById('ws-plan-badge').textContent = `Plan: ${plan.name} (₹${plan.priceMonthlyInr}/mo)`;
@@ -465,6 +671,8 @@ async function loadSubscriptionDetails() {
   document.getElementById('stat-staff-seats').textContent = `${staffCur} / ${staffMax}`;
   document.getElementById('seats-meter-label').textContent = `${staffCur} / ${staffMax} Seats Used`;
   document.getElementById('team-seats-desc').textContent = `${staffCur} of ${staffMax} seats currently occupied on ${plan.name} plan.`;
+  const staffCapacityEl = document.getElementById('overview-staff-capacity');
+  if (staffCapacityEl) staffCapacityEl.textContent = `${staffCur} of ${staffMax} seats occupied`;
 
   const percent = Math.min(100, Math.round((staffCur / staffMax) * 100));
   const bar = document.getElementById('seats-meter-bar');
@@ -480,6 +688,7 @@ function renderPricingCards(plans, currentPlanId) {
   container.innerHTML = plans.map(p => {
     const isCurrent = p.id === currentPlanId;
     const isPro = p.id === 'pro';
+    const ticketAllowance = p.unlimitedTickets ? 'Unlimited' : `Up to ${p.maxTicketsPerMonth}`;
     const border = isCurrent 
       ? 'border-2 border-blue-600 ring-4 ring-blue-500/15 shadow-xl shadow-blue-500/10' 
       : isPro 
@@ -511,7 +720,7 @@ function renderPricingCards(plans, currentPlanId) {
               <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
               </svg>
-              <span><strong>Unlimited</strong> Tickets (No Cap)</span>
+              <span><strong>${ticketAllowance}</strong> Tickets${p.unlimitedTickets ? '' : ' / Month'}</span>
             </div>
             <div class="flex items-center gap-2.5 ${p.features.inventoryManagement ? 'text-slate-800 font-medium' : 'text-slate-400 line-through'}">
               <svg class="w-4 h-4 ${p.features.inventoryManagement ? 'text-sky-600' : 'text-slate-300'} flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -537,7 +746,7 @@ function renderPricingCards(plans, currentPlanId) {
         <button 
           onclick="handleSwitchPlan('${p.id}')"
           ${isCurrent ? 'disabled' : ''}
-          class="mt-6 w-full py-3 px-4 rounded-2xl text-xs font-bold transition shadow-xs uppercase tracking-wider ${isCurrent ? 'bg-slate-100 text-slate-400 cursor-default' : 'bg-gradient-to-r from-[#3B66D6] to-[#00A8FF] hover:from-[#3255B8] hover:to-[#0096E6] text-white shadow-md shadow-blue-500/20 transform hover:-translate-y-0.5 active:translate-y-0'}">
+          class="mt-6 w-full py-3 px-4 rounded-2xl text-xs font-bold transition shadow-xs uppercase tracking-wider ${isCurrent ? 'bg-slate-100 text-slate-400 cursor-default' : 'bg-gradient-to-r from-zinc-700 via-black to-zinc-500 border border-white/15 text-white shadow-lg shadow-black/30 transform hover:-translate-y-0.5 active:translate-y-0'}">
           ${isCurrent ? 'Active Plan' : p.isUpgrade ? 'Upgrade to ' + p.name : 'Switch to ' + p.name}
         </button>
       </div>
@@ -583,11 +792,69 @@ async function loadWorkspaceTickets() {
   document.getElementById('stat-active-repairs').textContent = data.tickets.filter(t => t.status !== 'DELIVERED' && t.status !== 'CANCELLED').length;
   const totalVal = data.tickets.reduce((sum, t) => sum + (t.estimated_cost || 0), 0);
   document.getElementById('stat-total-value').textContent = `₹${totalVal.toLocaleString()}`;
+  renderWorkspaceOverview(data.tickets);
 
   const tbody = document.getElementById('ws-tickets-tbody');
   if (data.tickets.length === 0) {
     tbody.innerHTML = `<tr><td colspan="8" class="py-10 text-center text-slate-400 text-xs">No repair tickets found. Click "+ New Repair Intake" to register one.</td></tr>`;
     return;
+  }
+
+  function renderWorkspaceOverview(tickets) {
+    const activeTickets = tickets.filter(t => t.status !== 'DELIVERED' && t.status !== 'CANCELLED');
+    const counts = {
+      pending: tickets.filter(t => ['RECEIVED', 'DIAGNOSING', 'WAITING_PARTS'].includes(t.status)).length,
+      progress: tickets.filter(t => t.status === 'IN_PROGRESS').length,
+      completed: tickets.filter(t => t.status === 'COMPLETED').length,
+      delivered: tickets.filter(t => t.status === 'DELIVERED').length
+    };
+    const setText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    };
+
+    setText('overview-active-repairs', activeTickets.length);
+    setText('overview-repair-revenue', `₹${activeTickets.reduce((sum, t) => sum + (t.estimated_cost || 0), 0).toLocaleString()}`);
+    setText('overview-status-pending', counts.pending);
+    setText('overview-status-progress', counts.progress);
+    setText('overview-status-completed', counts.completed);
+    setText('overview-status-delivered', counts.delivered);
+
+    const recent = [...tickets].sort((a, b) => {
+      const aDate = new Date(a.updated_at || a.created_at || 0).getTime();
+      const bDate = new Date(b.updated_at || b.created_at || 0).getTime();
+      return bDate - aDate;
+    }).slice(0, 4);
+    const activity = document.getElementById('overview-recent-activity');
+    const ticketList = document.getElementById('overview-recent-tickets');
+    const statusClass = status => status === 'IN_PROGRESS' ? 'is-progress' : status === 'COMPLETED' ? 'is-complete' : status === 'DELIVERED' ? 'is-delivered' : '';
+
+    if (activity) {
+      activity.innerHTML = recent.length
+        ? recent.map(t => `
+          <div class="workspace-activity-item">
+            <span class="status-dot status-dot-${statusClass(t.status).replace('is-', '') || 'pending'}"></span>
+            <div><strong>Ticket #${t.ticket_number} · ${formatStatusLabel(t.status)}</strong><small>${t.assigned_staff_name ? `Assigned to ${t.assigned_staff_name}` : 'No technician assigned'}${t.customer_name ? ` · ${t.customer_name}` : ''}</small></div>
+            <small>${new Date(t.updated_at || t.created_at || Date.now()).toLocaleDateString()}</small>
+          </div>
+        `).join('')
+        : '<div class="workspace-empty-state">No repair activity yet.</div>';
+    }
+
+    if (ticketList) {
+      ticketList.innerHTML = recent.length
+        ? recent.map(t => `
+          <div class="workspace-ticket-item">
+            <strong>#${t.ticket_number}</strong>
+            <div><strong>${t.customer_name || 'Walk-in Customer'}</strong><small>${t.customer_phone || 'No phone added'}</small></div>
+            <div><strong>${t.brand || ''} ${t.model || ''}</strong><small>${t.device_category || 'Device'}</small></div>
+            <span>${t.assigned_staff_name || 'Unassigned'}</span>
+            <strong>₹${(t.estimated_cost || 0).toLocaleString()}</strong>
+            <span class="workspace-status-badge ${statusClass(t.status)}">${formatStatusLabel(t.status)}</span>
+          </div>
+        `).join('')
+        : '<div class="workspace-empty-state">No repair tickets yet. Start with a new intake.</div>';
+    }
   }
 
   tbody.innerHTML = data.tickets.map(t => {
@@ -836,6 +1103,12 @@ async function loadWorkspaceStaff() {
   if (!res.ok) return;
 
   state.staff = data.staff;
+  const staffCountEl = document.getElementById('overview-staff-members');
+  const staffCapacityEl = document.getElementById('overview-staff-capacity');
+  if (staffCountEl) staffCountEl.textContent = data.staff.length;
+  if (staffCapacityEl && state.subscription?.currentPlan) {
+    staffCapacityEl.textContent = `${data.staff.length} of ${state.subscription.currentPlan.maxStaff} seats occupied`;
+  }
 
   const staffSelect = document.getElementById('intake-staff-select');
   if (staffSelect) {
@@ -920,6 +1193,8 @@ async function loadWorkspaceCustomers() {
 
   state.customers = data.customers;
   document.getElementById('stat-total-customers').textContent = data.customers.length;
+  const overviewCustomers = document.getElementById('overview-total-customers');
+  if (overviewCustomers) overviewCustomers.textContent = data.customers.length;
 
   const tbody = document.getElementById('ws-customers-tbody');
   if (data.customers.length === 0) {
@@ -927,7 +1202,18 @@ async function loadWorkspaceCustomers() {
     return;
   }
 
-  tbody.innerHTML = data.customers.map(c => {
+  renderCustomerDirectoryRows(data.customers);
+}
+
+function renderCustomerDirectoryRows(customers) {
+  const tbody = document.getElementById('ws-customers-tbody');
+  if (!tbody) return;
+  if (customers.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-slate-400 text-xs">No customers match this search.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = customers.map(c => {
     const initials = (c.default_name || 'C').substring(0, 2).toUpperCase();
     return `
       <tr class="hover:bg-blue-50/40 transition-colors">
@@ -950,6 +1236,14 @@ async function loadWorkspaceCustomers() {
       </tr>
     `;
   }).join('');
+}
+
+function filterCustomerDirectory() {
+  const query = (document.getElementById('ws-customer-search')?.value || '').trim().toLowerCase();
+  const filtered = state.customers.filter(customer => {
+    return `${customer.default_name || ''} ${customer.phone_e164 || ''}`.toLowerCase().includes(query);
+  });
+  renderCustomerDirectoryRows(filtered);
 }
 
 async function testFeatureAccess(feature) {
@@ -984,18 +1278,58 @@ async function testFeatureAccess(feature) {
 
 function switchWorkspaceTab(tab) {
   state.currentTab = tab;
-  const tabs = ['tickets', 'customers', 'team', 'billing', 'features'];
+  const tabs = ['overview', 'tickets', 'customers', 'team', 'billing', 'features'];
   tabs.forEach(t => {
-    const panel = document.getElementById(`tab-panel-${t}`);
+    const panel = t === 'overview'
+      ? document.getElementById('workspace-overview-panel')
+      : document.getElementById(`tab-panel-${t}`);
     const btn = document.getElementById(`tab-btn-${t}`);
+    const navBtn = document.getElementById(`workspace-nav-${t}`);
     if (t === tab) {
       if (panel) panel.classList.remove('hidden');
-      if (btn) btn.className = 'bg-gradient-to-r from-[#3B66D6] to-[#00A8FF] text-white font-bold rounded-xl px-4 sm:px-5 py-2.5 text-xs shadow-md shadow-blue-500/20 transition-all flex items-center gap-2';
+      if (panel) panel.style.display = 'block';
+      if (btn) btn.className = 'bg-gradient-to-r from-zinc-700 via-black to-zinc-500 border border-white/15 text-white font-bold rounded-xl px-4 sm:px-5 py-2.5 text-xs shadow-lg shadow-black/30 transition-all flex items-center gap-2';
+      if (navBtn) navBtn.classList.add('workspace-nav-active');
     } else {
       if (panel) panel.classList.add('hidden');
+      if (panel) panel.style.display = 'none';
       if (btn) btn.className = 'text-slate-600 hover:text-slate-900 font-semibold rounded-xl px-4 sm:px-5 py-2.5 text-xs hover:bg-white/80 transition-all flex items-center gap-2';
+      if (navBtn) navBtn.classList.remove('workspace-nav-active');
     }
   });
+}
+
+function openProfilePlanPanel(tab) {
+  const modal = document.getElementById('modal-profile-plans');
+  const content = document.getElementById('profile-plan-panel-content');
+  const panel = document.getElementById(`tab-panel-${tab}`);
+  if (!modal || !content || !panel) return;
+
+  content.replaceChildren(panel);
+  panel.classList.remove('hidden');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  document.body.classList.add('overflow-hidden');
+}
+
+function closeProfilePlanPanel() {
+  const modal = document.getElementById('modal-profile-plans');
+  const content = document.getElementById('profile-plan-panel-content');
+  const billing = document.getElementById('tab-panel-billing');
+  const features = document.getElementById('tab-panel-features');
+  const dashboard = document.getElementById('shop-workspace-dashboard');
+
+  if (dashboard) {
+    if (billing) dashboard.appendChild(billing);
+    if (features) dashboard.appendChild(features);
+  }
+  if (billing) billing.classList.add('hidden');
+  if (features) features.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+  document.body.classList.remove('overflow-hidden');
 }
 
 function toggleIntakeModal(show) {
@@ -1213,6 +1547,8 @@ async function handleCustomerVerifyOtp() {
 }
 
 async function loadCustomerDashboard() {
+  state.currentPortal = 'track';
+  renderHeaderUserArea();
   const gateway = document.getElementById('public-portal-gateway');
   if (gateway) gateway.classList.add('hidden');
   const trackView = document.getElementById('track-view-container');
@@ -1231,17 +1567,20 @@ async function loadCustomerDashboard() {
 
     document.getElementById('cust-name-heading').textContent = profileData.customer.name;
     document.getElementById('cust-phone-subheading').textContent = profileData.customer.phone;
+    state.customerProfile = profileData.customer;
 
     const ticketsRes = await fetch('/api/track/tickets', {
       headers: { Authorization: `Bearer ${state.customerToken}` }
     });
     const ticketsData = await ticketsRes.json();
     if (!ticketsRes.ok) throw new Error(ticketsData.error);
+    state.customerTicketCount = ticketsData.tickets.length;
+    renderHeaderUserArea();
 
     const list = document.getElementById('cust-tickets-list');
     if (ticketsData.tickets.length === 0) {
       list.innerHTML = `
-        <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-400">
+        <div class="customer-ticket-card p-8 text-center" style="color:#9299A5">
           <p class="text-sm font-medium">No repair records found for this phone number.</p>
         </div>
       `;
@@ -1250,117 +1589,82 @@ async function loadCustomerDashboard() {
 
     list.innerHTML = ticketsData.tickets.map(t => {
       const isDone = t.status === 'COMPLETED' || t.status === 'DELIVERED';
-      const statusBadge = isDone 
-        ? 'bg-emerald-50 text-emerald-800 border-emerald-200 font-bold' 
-        : 'bg-indigo-50 text-indigo-700 border-indigo-200 font-bold';
+      const statusBadge = isDone
+        ? 'done'
+        : (t.status === 'IN_PROGRESS' || t.status === 'WAITING_PARTS' ? 'progress' : 'info');
 
       return `
-        <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-          
-          <!-- Top Row: Device & Ticket Number -->
-          <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
+        <article class="customer-ticket-card">
+          <div class="customer-ticket-header">
             <div>
-              <span class="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">${t.ticket_number}</span>
-              <h3 class="text-xl font-black text-slate-900 mt-1">${t.brand} ${t.model}</h3>
-              <p class="text-xs text-slate-500 font-medium">${t.device_category} Repair</p>
+              <span class="customer-ticket-number">${t.ticket_number}</span>
+              <h3>${t.brand} ${t.model}</h3>
+              <p>${t.device_category} repair</p>
             </div>
-            <div class="text-right">
-              <span class="px-3 py-1 rounded-full text-xs uppercase tracking-wide border ${statusBadge}">
+            <div class="customer-ticket-status">
+              <span class="customer-track-badge ${statusBadge}">
                 ${formatStatusLabel(t.status)}
               </span>
-              <div class="text-xs font-mono font-extrabold text-slate-900 mt-2">Estimate: ₹${(t.estimated_cost || 0).toLocaleString()}</div>
+              <strong>Estimate ₹${(t.estimated_cost || 0).toLocaleString()}</strong>
             </div>
           </div>
 
-          <!-- Interactive Repair Stepper Progress Bar -->
-          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-            <div class="flex items-center justify-between text-[11px] font-bold text-slate-600 mb-2">
+          <div class="customer-track-content">
+          <div class="customer-track-progress">
+            <div class="customer-track-progress-labels">
               <span>Intake</span>
               <span>Diagnosis</span>
               <span>In Repair</span>
               <span>Ready for Pickup</span>
               <span>Delivered</span>
             </div>
-            <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden flex">
-              <div class="bg-indigo-600 h-full transition-all duration-500" style="width: ${getStepperWidth(t.status)};"></div>
+            <div class="customer-track-progress-bar">
+              <div style="width:${getStepperWidth(t.status)}"></div>
             </div>
           </div>
 
-          <!-- Repair Shop Card -->
-          <div class="bg-indigo-50/60 rounded-2xl p-4 border border-indigo-100 flex flex-wrap items-center justify-between gap-4">
+          <aside class="customer-track-side">
             <div>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">Service Center</span>
-              <h4 class="text-sm font-black text-slate-900">${t.shop_name}</h4>
-              <p class="text-xs text-slate-600 mt-0.5">${t.shop_address || 'Local Authorized Store'}</p>
+              <span class="customer-track-label">Service center</span>
+              <h4>${t.shop_name}</h4>
+              <p>${t.shop_address || 'Local authorized store'}</p>
             </div>
             ${t.shop_phone ? `
-              <a href="tel:${t.shop_phone}" class="bg-white hover:bg-slate-50 border border-slate-200 text-indigo-700 font-bold text-xs px-4 py-2 rounded-xl transition shadow-xs flex items-center gap-2">
-                <svg class="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                <span>Call Shop (${t.shop_phone})</span>
-              </a>
+              <a href="tel:${t.shop_phone}" class="customer-track-call">Call shop · ${t.shop_phone}</a>
             ` : ''}
-          </div>
+          </aside>
 
-          <!-- Assigned Technician Info (if assigned) -->
-          ${t.assigned_staff_name ? `
-            <div class="flex items-center justify-between bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs">
-              <div class="flex items-center gap-2.5">
-                <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs">
-                  <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                </span>
-                <div>
-                  <span class="font-bold text-slate-800">Assigned Technician:</span>
-                  <span class="text-slate-600 ml-1 font-semibold">${t.assigned_staff_name}</span>
-                </div>
-              </div>
-              ${t.assigned_staff_phone ? `
-                <a href="tel:${t.assigned_staff_phone}" class="bg-white border border-slate-200 hover:border-indigo-300 text-indigo-600 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-2xs">
-                  <svg class="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
-                  <span>Call Tech (${t.assigned_staff_phone})</span>
-                </a>
-              ` : ''}
-            </div>
-          ` : ''}
+          <aside class="customer-track-side">
+            <span class="customer-track-label">Issue reported</span>
+            <p style="color:#F5F6F8">${t.issue_description || 'No issue description provided'}</p>
+            ${t.assigned_staff_name ? `
+              <span class="customer-track-label" style="margin-top:.8rem">Technician</span>
+              <h4>${t.assigned_staff_name}</h4>
+              ${t.assigned_staff_phone ? `<a href="tel:${t.assigned_staff_phone}" class="customer-track-call">Call technician</a>` : ''}
+            ` : ''}
+          </aside>
 
-          <!-- Problem & Description -->
-          <div class="text-xs">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Issue Reported</span>
-            <p class="text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">${t.issue_description}</p>
-          </div>
-
-          <!-- Timeline -->
-          <div class="pt-2">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-3">Live Service Activity Log</span>
-            <div class="space-y-2.5">
+          <div class="customer-track-timeline">
+            <span class="customer-track-label">Live service activity</span>
+            <div>
               ${(t.timeline || []).map(ev => `
-                <div class="flex items-center gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <span class="font-bold text-indigo-700 font-mono text-[11px]">${formatStatusLabel(ev.to_status)}</span>
-                  <span class="text-slate-600 flex-1">${ev.notes || 'Status updated'}</span>
-                  <span class="text-[10px] font-mono text-slate-400">${new Date(ev.created_at).toLocaleDateString()}</span>
+                <div class="customer-track-timeline-row">
+                  <strong>${formatStatusLabel(ev.to_status)}</strong>
+                  <span>${ev.notes || 'Status updated'}</span>
+                  <time>${new Date(ev.created_at).toLocaleDateString()}</time>
                 </div>
               `).join('')}
             </div>
           </div>
-
-          <!-- Customer Ticket Actions -->
-          <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
-            <span class="text-[11px] text-slate-400 font-medium">Record Created: ${new Date(t.created_at).toLocaleDateString()}</span>
-            <button onclick="handleDeleteCustomerTicket('${t.id}', '${t.ticket_number}')" class="text-xs font-bold text-rose-600 hover:text-rose-800 hover:bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200 transition flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5 text-rose-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              <span>Delete / Cancel Record</span>
-            </button>
           </div>
 
-        </div>
+          <footer class="customer-track-footer">
+            <span>Record created ${new Date(t.created_at).toLocaleDateString()}</span>
+            <button type="button" onclick="handleDeleteCustomerTicket('${t.id}', '${t.ticket_number}')" class="customer-track-delete">
+              Delete / cancel record
+            </button>
+          </footer>
+        </article>
       `;
     }).join('');
 
@@ -1405,6 +1709,8 @@ function getStepperWidth(status) {
 
 function customerLogout() {
   state.customerToken = '';
+  state.customerProfile = null;
+  state.customerTicketCount = 0;
   localStorage.removeItem('ff_cust_token');
   const custDash = document.getElementById('cust-dashboard-screen');
   if (custDash) custDash.classList.add('hidden');

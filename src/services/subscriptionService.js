@@ -23,7 +23,8 @@ async function getWorkspaceSubscription(workspaceId) {
     },
     tickets: {
       totalCreated: totalTickets,
-      unlimited: true // Specifically not capped at 30
+      unlimited: currentPlan.unlimitedTickets,
+      monthlyLimit: currentPlan.maxTicketsPerMonth
     }
   };
 

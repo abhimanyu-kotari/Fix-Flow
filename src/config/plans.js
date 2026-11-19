@@ -3,7 +3,7 @@
  * 
  * Rules & Requirements:
  * - Free: ₹0/month, 1 owner account (no additional staff), 1 branch,
- *   core repair management, customer tracking, and unlimited tickets (not capped at 30/mo).
+ *   core repair management, customer tracking, and up to 30 tickets/month.
  * - Starter: ₹199/month, unlimited tickets, up to 3 staff accounts, basic reports, SMS alerts.
  * - Pro: ₹499/month, up to 10 staff accounts, inventory, Repair Passport, advanced reports.
  * - Business: ₹999/month, multiple branches (up to 5), 25 staff accounts, advanced analytics, priority support.
@@ -16,7 +16,8 @@ const PLANS = {
     priceMonthlyInr: 0,
     maxStaff: 1, // Owner account only
     maxBranches: 1,
-    unlimitedTickets: true, // Specifically not capped at 30/month
+    unlimitedTickets: false,
+    maxTicketsPerMonth: 30,
     features: {
       coreRepairManagement: true,
       customerTracking: true,
@@ -37,6 +38,7 @@ const PLANS = {
     maxStaff: 3,
     maxBranches: 1,
     unlimitedTickets: true,
+    maxTicketsPerMonth: null,
     features: {
       coreRepairManagement: true,
       customerTracking: true,
@@ -57,6 +59,7 @@ const PLANS = {
     maxStaff: 10,
     maxBranches: 1,
     unlimitedTickets: true,
+    maxTicketsPerMonth: null,
     features: {
       coreRepairManagement: true,
       customerTracking: true,
@@ -77,6 +80,7 @@ const PLANS = {
     maxStaff: 25,
     maxBranches: 5,
     unlimitedTickets: true,
+    maxTicketsPerMonth: null,
     features: {
       coreRepairManagement: true,
       customerTracking: true,

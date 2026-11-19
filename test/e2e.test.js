@@ -77,7 +77,8 @@ describe('Phase 6: End-to-End System Integration & Workflow Verification (MongoD
     });
     const subData = await subRes.json();
     assert.equal(subData.currentPlan.id, 'free');
-    assert.equal(subData.usage.tickets.unlimited, true);
+    assert.equal(subData.usage.tickets.unlimited, false);
+    assert.equal(subData.usage.tickets.monthlyLimit, 30);
   });
 
   test('E2E Step 2: Shop creates repair ticket and deduplicates customer identity', async () => {

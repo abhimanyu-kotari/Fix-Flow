@@ -17,8 +17,9 @@ describe('SaaS Subscription Plans & Entitlements', () => {
     assert.ok(PLANS.business);
   });
 
-  test('ensures Free plan is not capped at 30 tickets per month', () => {
-    assert.equal(PLANS.free.unlimitedTickets, true);
+  test('limits Free plan to 30 tickets per month', () => {
+    assert.equal(PLANS.free.unlimitedTickets, false);
+    assert.equal(PLANS.free.maxTicketsPerMonth, 30);
     assert.equal(PLANS.free.priceMonthlyInr, 0);
   });
 

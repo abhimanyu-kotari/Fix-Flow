@@ -1,4 +1,5 @@
-const { Customer, ShopCustomer, RepairTicket, User } = require('../models');
+const { Customer, ShopCustomer, RepairTicket, User, Subscription } = require('../models');
+const { getPlan } = require('../config/plans');
 const { normalizePhone } = require('../utils/phone');
 
 const VALID_STATUSES = [
@@ -79,6 +80,24 @@ async function createTicket(workspaceId, operatorUser, ticketData) {
   const safeBrand = (brand && brand.trim()) || 'Generic';
   const safeModel = (model && model.trim()) || 'Device';
   const safeIssue = (issueDescription && issueDescription.trim()) || 'General Inspection & Diagnostics';
+
+  const subscription = await Subscription.findOne({ workspace: workspaceId });
+  const currentPlan = getPlan(subscription ? subscription.planId : 'free');
+  if (!currentPlan.unlimitedTickets) {
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const ticketsCreatedThisMonth = await RepairTicket.countDocuments({
+      workspace: workspaceId,
+      createdAt: { $gte: monthStart }
+    });
+
+    if (ticketsCreatedThisMonth >= currentPlan.maxTicketsPerMonth) {
+      throw new Error(
+        `${currentPlan.name} plan allows up to ${currentPlan.maxTicketsPerMonth} repair tickets per month. Please upgrade your plan to create another ticket.`
+      );
+    }
+  }
 
   // 1. Resolve or create global customer (friendly fallback if not provided)
   const { customer, isNewCustomer } = await findOrCreateCustomer(

@@ -88,8 +88,9 @@ describe('Phase 5: SaaS Subscription Engine & Limit Enforcement (MongoDB)', () =
     assert.equal(data.usage.staff.current, 1);
     assert.equal(data.usage.staff.max, 1);
 
-    // Verify Free tier is NOT capped at 30 tickets
-    assert.equal(data.usage.tickets.unlimited, true);
+    // Verify Free tier is capped at 30 tickets per month
+    assert.equal(data.usage.tickets.unlimited, false);
+    assert.equal(data.usage.tickets.monthlyLimit, 30);
     assert.equal(data.usage.tickets.totalCreated, 1);
   });
 
