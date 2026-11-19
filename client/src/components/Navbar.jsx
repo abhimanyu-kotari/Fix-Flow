@@ -79,55 +79,7 @@ export default function Navbar({
 
         {/* Right Header Actions */}
         <div id="header-user-area" className="flex items-center gap-3">
-
-          {/* Shop logged in */}
-          {isShopLoggedIn && (
-            <div className="relative">
-              <div
-                className="flex items-center gap-2 cursor-pointer p-1.5 rounded-2xl hover:bg-white/10 transition"
-                onClick={() => setShopMenuOpen(!shopMenuOpen)}
-              >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-900 text-white font-black text-xs flex items-center justify-center border border-white/20 shadow-xs">
-                  {initials}
-                </div>
-                <div className="text-left hidden sm:block">
-                  <div className="text-xs font-bold text-white">{workspace?.name}</div>
-                  <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
-                    {workspace?.role || 'Shop Staff'}
-                  </span>
-                </div>
-                <svg className="w-3.5 h-3.5 text-slate-300 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-
-              {shopMenuOpen && (
-                <div className="absolute right-0 mt-2 w-72 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-4 z-50 text-xs">
-                  <div className="pb-3 border-b border-zinc-800">
-                    <p className="text-xs font-bold text-white">{workspace?.name}</p>
-                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">{repairerProfile?.email || 'Owner Account'}</p>
-                    <span className="inline-block mt-2 text-[10px] font-extrabold uppercase px-2 py-0.5 bg-white/10 text-neutral-300 border border-white/20 rounded-full">
-                      {workspace?.role || 'Shop Owner'}
-                    </span>
-                  </div>
-                  <div className="pt-3 space-y-1">
-                    <button
-                      onClick={() => { setShopMenuOpen(false); onSwitchPortal('shop'); }}
-                      className="w-full text-left py-2 px-3 rounded-xl text-zinc-300 hover:text-white hover:bg-zinc-800 transition font-medium"
-                    >
-                      Workspace Dashboard
-                    </button>
-                    <button
-                      onClick={() => { setShopMenuOpen(false); onShopLogout(); }}
-                      className="w-full text-left py-2 px-3 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition font-bold"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Note: In Shop Workspace, user profile is exclusively displayed in the left sidebar footer as requested */}
 
           {/* Customer logged in */}
           {isCustLoggedIn && (

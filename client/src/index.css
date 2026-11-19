@@ -1647,11 +1647,11 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; }
     }
 
     .workspace-sidebar-brand {
-      display: none;
+      display: flex;
     }
 
     #shop-view-container #workspace-sidebar .workspace-sidebar-brand {
-      display: none;
+      display: flex;
     }
 
     #workspace-sidebar #workspace-sidebar-toggle {
@@ -1862,6 +1862,15 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; }
     #shop-workspace-dashboard > #tab-panel-billing,
     #shop-workspace-dashboard > #tab-panel-features {
       display: none;
+    }
+
+    #shop-workspace-dashboard > .workspace-page-panel.is-active,
+    #shop-workspace-dashboard > #tab-panel-tickets.is-active,
+    #shop-workspace-dashboard > #tab-panel-customers.is-active,
+    #shop-workspace-dashboard > #tab-panel-team.is-active,
+    #shop-workspace-dashboard > #tab-panel-billing.is-active,
+    #shop-workspace-dashboard > #tab-panel-features.is-active {
+      display: block !important;
     }
 
     #shop-workspace-dashboard > #tab-panel-tickets,

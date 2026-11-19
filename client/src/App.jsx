@@ -321,6 +321,7 @@ export default function App() {
             onUpdateTicketStatus={handleUpdateTicketStatus}
             onDeleteTicket={handleDeleteShopTicket}
             onSwitchPlan={handleSwitchPlan}
+            onShopLogout={handleShopLogout}
             showToast={showToast}
           />
         ) : isCustActive ? (

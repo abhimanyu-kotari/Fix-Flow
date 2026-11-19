@@ -8,20 +8,20 @@ function formatStatusLabel(s) {
 function getStatusPill(status) {
   switch (status) {
     case 'RECEIVED':
-      return { selectClass: 'bg-slate-100 text-slate-800 border-slate-300' };
+      return { selectClass: 'bg-slate-800 text-slate-300 border-slate-700' };
     case 'DIAGNOSING':
-      return { selectClass: 'bg-purple-50 text-purple-800 border-purple-200' };
+      return { selectClass: 'bg-purple-950/80 text-purple-300 border-purple-800' };
     case 'IN_PROGRESS':
-      return { selectClass: 'bg-amber-50 text-amber-800 border-amber-200 font-bold' };
+      return { selectClass: 'bg-amber-950/80 text-amber-300 border-amber-700 font-bold' };
     case 'WAITING_PARTS':
-      return { selectClass: 'bg-rose-50 text-rose-800 border-rose-200' };
+      return { selectClass: 'bg-rose-950/80 text-rose-300 border-rose-800' };
     case 'COMPLETED':
-      return { selectClass: 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' };
+      return { selectClass: 'bg-emerald-950/80 text-emerald-300 border-emerald-700 font-bold' };
     case 'DELIVERED':
-      return { selectClass: 'bg-teal-50 text-teal-800 border-teal-200' };
+      return { selectClass: 'bg-indigo-950/80 text-indigo-300 border-indigo-700' };
     case 'CANCELLED':
     default:
-      return { selectClass: 'bg-gray-100 text-gray-600 border-gray-200' };
+      return { selectClass: 'bg-zinc-800 text-zinc-400 border-zinc-700' };
   }
 }
 
@@ -49,30 +49,68 @@ export default function ShopWorkspace({
   onUpdateTicketStatus,
   onDeleteTicket,
   onSwitchPlan,
+  onShopLogout,
   showToast
 }) {
-  const [activeTab, setActiveTab] = useState('tickets'); // 'tickets' | 'customers' | 'team' | 'subscription'
+  const [activeTab, setActiveTab] = useState('overview'); // Default matches Image 2
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [customerSearch, setCustomerSearch] = useState('');
 
-  // KPI calculations
+  // Initials for avatar in sidebar
+  const initials = useMemo(() => {
+    const str = workspace?.name || repairer?.name || 'WS';
+    const parts = str.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return str.substring(0, 2).toUpperCase();
+  }, [workspace, repairer]);
+
+  // Current Plan
+  const currentPlan = subscription?.plan || { id: 'free', name: 'Free' };
+  const ticketsUsed = subscription?.usage?.ticketsThisMonth || tickets.length;
+  const ticketLimit = subscription?.plan?.maxTicketsPerMonth || 30;
+  const isUnlimited = subscription?.plan?.unlimitedTickets;
+  const maxStaff = subscription?.plan?.maxStaff || 1;
+
+  // Active Repairs (not delivered / cancelled)
   const activeRepairsCount = useMemo(() => {
-    return tickets.filter(t => !['COMPLETED', 'DELIVERED', 'CANCELLED'].includes(t.status)).length;
+    return tickets.filter(t => t.status !== 'DELIVERED' && t.status !== 'CANCELLED').length;
   }, [tickets]);
 
-  const totalValue = useMemo(() => {
-    return tickets.reduce((sum, t) => sum + (Number(t.estimated_cost) || 0), 0);
+  // Active Revenue sum
+  const activeRevenue = useMemo(() => {
+    return tickets
+      .filter(t => t.status !== 'DELIVERED' && t.status !== 'CANCELLED')
+      .reduce((sum, t) => sum + (Number(t.estimated_cost) || 0), 0);
+  }, [tickets]);
+
+  // Status breakdown counts
+  const statusCounts = useMemo(() => {
+    return {
+      pending: tickets.filter(t => ['RECEIVED', 'DIAGNOSING', 'WAITING_PARTS'].includes(t.status)).length,
+      progress: tickets.filter(t => t.status === 'IN_PROGRESS').length,
+      completed: tickets.filter(t => t.status === 'COMPLETED').length,
+      delivered: tickets.filter(t => t.status === 'DELIVERED').length
+    };
+  }, [tickets]);
+
+  // Recent tickets sorted descending
+  const recentTickets = useMemo(() => {
+    return [...tickets].sort((a, b) => {
+      const aDate = new Date(a.updated_at || a.created_at || 0).getTime();
+      const bDate = new Date(b.updated_at || b.created_at || 0).getTime();
+      return bDate - aDate;
+    }).slice(0, 4);
   }, [tickets]);
 
   // Filtered tickets
   const filteredTickets = useMemo(() => {
     return tickets.filter(t => {
-      // Status filter
-      if (statusFilter !== 'ALL' && t.status !== statusFilter) {
-        return false;
-      }
-      // Search filter
+      if (statusFilter !== 'ALL' && t.status !== statusFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const numMatch = (t.ticket_number || '').toLowerCase().includes(q);
@@ -96,200 +134,358 @@ export default function ShopWorkspace({
     });
   }, [customers, customerSearch]);
 
-  const currentPlan = subscription?.plan || { id: 'free', name: 'Free' };
-  const ticketsUsed = subscription?.usage?.ticketsThisMonth || tickets.length;
-  const ticketLimit = subscription?.plan?.maxTicketsPerMonth || 30;
-  const isUnlimited = subscription?.plan?.unlimitedTickets;
-
   return (
-    <div id="shop-view-container" className="relative w-full overflow-hidden min-h-[calc(100vh-4rem)] py-8 sm:py-12 px-4 sm:px-6 lg:px-8 shadow-2xl">
-      <div id="shop-workspace-dashboard" className="max-w-7xl mx-auto space-y-6">
-        
-        {/* SHOP HERO BANNER */}
-        <div className="relative overflow-hidden bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-2xl">
-          <div className="flex items-center gap-5 relative z-10">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-950/40 border border-white/20 transform transition-transform hover:scale-105 flex-shrink-0">
-              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+    <div id="shop-view-container" className={`relative w-full overflow-hidden min-h-[calc(100vh-3.5rem)] ${sidebarCollapsed ? 'workspace-sidebar-collapsed' : ''}`}>
+      
+      {/* 1: LEFT WORKSPACE SIDEBAR (Identical to Image 2) */}
+      <aside id="workspace-sidebar" aria-label="Workspace navigation">
+        <button 
+          id="workspace-sidebar-toggle" 
+          type="button" 
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)} 
+          aria-label="Toggle workspace sidebar" 
+          aria-expanded={!sidebarCollapsed}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+
+        {/* Brand squircle & workspace title */}
+        <div className="workspace-sidebar-brand">
+          <div className="workspace-brand-mark">FF</div>
+          <div>
+            <strong>Fix Flow</strong>
+            <span>Repair workspace</span>
+          </div>
+        </div>
+
+        {/* Main Workspace navigation links */}
+        <div className="workspace-sidebar-section">
+          <span className="workspace-sidebar-label">Workspace</span>
+
+          <button 
+            type="button" 
+            className={`workspace-nav-item cursor-pointer ${activeTab === 'overview' ? 'workspace-nav-active' : ''}`}
+            onClick={() => setActiveTab('overview')}
+          >
+            <span className="workspace-nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
               </svg>
-            </div>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                  {workspace?.name || 'Electronics Repair Workspace'}
-                </h1>
-                <span id="ws-plan-badge" className="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                  {currentPlan.name} Plan
+            </span>
+            <span>Overview</span>
+          </button>
+
+          <button 
+            type="button" 
+            className={`workspace-nav-item cursor-pointer ${activeTab === 'tickets' ? 'workspace-nav-active' : ''}`}
+            onClick={() => setActiveTab('tickets')}
+          >
+            <span className="workspace-nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 5h14v14H5zM8 9h8M8 12h8M8 15h5" />
+              </svg>
+            </span>
+            <span>Repair Tickets</span>
+          </button>
+
+          <button 
+            type="button" 
+            className={`workspace-nav-item cursor-pointer ${activeTab === 'customers' ? 'workspace-nav-active' : ''}`}
+            onClick={() => setActiveTab('customers')}
+          >
+            <span className="workspace-nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="8" r="3" />
+                <path d="M5 20a7 7 0 0 1 14 0" />
+              </svg>
+            </span>
+            <span>Customer Directory</span>
+          </button>
+
+          <button 
+            type="button" 
+            className={`workspace-nav-item cursor-pointer ${activeTab === 'team' ? 'workspace-nav-active' : ''}`}
+            onClick={() => setActiveTab('team')}
+          >
+            <span className="workspace-nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="9" cy="8" r="3" />
+                <path d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 1 1 3-3M16 15a5 5 0 0 1 5 5" />
+              </svg>
+            </span>
+            <span>Staff &amp; Team Seats</span>
+          </button>
+        </div>
+
+        {/* Management section */}
+        <div className="workspace-sidebar-section workspace-sidebar-management">
+          <span className="workspace-sidebar-label">Management</span>
+          <button 
+            type="button" 
+            className={`workspace-nav-item cursor-pointer ${activeTab === 'subscription' ? 'workspace-nav-active' : ''}`}
+            onClick={() => setActiveTab('subscription')}
+            title="Shop Settings & Plans"
+          >
+            <span className="workspace-nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm0-5v2m0 14v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M3 12h2m14 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+              </svg>
+            </span>
+            <span>Shop Settings</span>
+          </button>
+        </div>
+
+        {/* Single Profile Avatar in Sidebar Footer (Exclusively one profile as requested) */}
+        <div 
+          className="workspace-sidebar-account relative cursor-pointer" 
+          role="button" 
+          tabIndex={0}
+          onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+        >
+          <div className="workspace-account-avatar flex items-center justify-center font-bold text-white uppercase text-xs">
+            {initials}
+          </div>
+          <div className="workspace-account-copy">
+            <strong className="truncate">{workspace?.name || 'Shop workspace'}</strong>
+            <span>{currentPlan.name || 'Free'} plan</span>
+          </div>
+          <span className="workspace-account-menu cursor-pointer" aria-label="Open account menu">•••</span>
+
+          {accountMenuOpen && (
+            <div 
+              className="absolute bottom-full left-0 mb-2 w-64 bg-[#15191F] border border-[#292F39] rounded-2xl shadow-2xl p-4 z-50 text-xs text-white"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="pb-3 border-b border-[#292F39]">
+                <p className="text-xs font-bold text-white truncate">{workspace?.name}</p>
+                <p className="text-[11px] text-zinc-400 truncate mt-0.5">{repairer?.email || 'Owner Account'}</p>
+                <span className="inline-block mt-2 text-[10px] font-extrabold uppercase px-2 py-0.5 bg-white/10 text-neutral-300 border border-white/20 rounded-full">
+                  {workspace?.role || 'Shop Owner'}
                 </span>
               </div>
-              <p id="ws-meta-subheading" className="text-xs text-slate-400 mt-1 flex flex-wrap items-center gap-3">
-                <span>Owner: <strong>{repairer?.name || 'Shop Owner'}</strong></span>
-                <span>•</span>
-                <span>{workspace?.phone || 'No phone set'}</span>
-                {workspace?.address && (
-                  <>
-                    <span>•</span>
-                    <span>{workspace.address}</span>
-                  </>
+              <div className="pt-3 space-y-1.5">
+                <button
+                  onClick={() => { setAccountMenuOpen(false); setActiveTab('subscription'); }}
+                  className="w-full text-left py-2 px-3 rounded-xl text-zinc-300 hover:text-white hover:bg-[#1B2028] transition font-medium flex items-center justify-between cursor-pointer"
+                >
+                  <span>Subscription &amp; Plans</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold">{currentPlan.name}</span>
+                </button>
+                {onShopLogout && (
+                  <button
+                    onClick={() => { setAccountMenuOpen(false); onShopLogout(); }}
+                    className="w-full text-left py-2 px-3 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition font-bold cursor-pointer"
+                  >
+                    Sign Out
+                  </button>
                 )}
-              </p>
+              </div>
             </div>
-          </div>
-
-          <div className="flex items-center gap-3 w-full md:w-auto relative z-10">
-            <button 
-              type="button"
-              onClick={onOpenNewTicketModal}
-              className="w-full md:w-auto bg-gradient-to-r from-sky-400 to-blue-600 hover:from-sky-500 hover:to-blue-700 text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-2xl shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              <span>+ New Repair Ticket</span>
-            </button>
-          </div>
+          )}
         </div>
+      </aside>
 
-        {/* 4 KPI METRIC CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: Active Repairs */}
-          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-800 bg-slate-900/90 shadow-lg group hover:border-sky-500/40 transition">
-            <div className="flex items-center justify-between">
+      {/* 2: MAIN DASHBOARD CONTENT CONTAINER */}
+      <div id="shop-workspace-dashboard" className="max-w-7xl">
+        
+        {/* TAB 1: WORKSPACE OVERVIEW (Matches Image 2) */}
+        {activeTab === 'overview' && (
+          <section id="workspace-overview-panel" className="workspace-page-panel is-active" style={{ display: 'block' }}>
+            
+            {/* Header: Eyebrow, Title, Subtitle & Action */}
+            <div className="workspace-page-header">
               <div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Repairs</span>
-                <div className="text-2xl sm:text-3xl font-black text-white mt-1">{activeRepairsCount}</div>
-                <span className="text-[11px] text-sky-400 font-medium">In workbench queue</span>
+                <span className="workspace-eyebrow">WORKSPACE OVERVIEW</span>
+                <h1>Overview</h1>
+                <p>Here's what's happening with your shop today.</p>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-400 text-white flex items-center justify-center shadow-lg shadow-blue-500/25">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+              <button 
+                type="button" 
+                className="workspace-primary-action cursor-pointer hover:opacity-90 transition"
+                onClick={onOpenNewTicketModal}
+              >
+                <span>+</span> New Repair Intake
+              </button>
+            </div>
+
+            {/* 4 Metric KPI Widgets */}
+            <div className="workspace-stat-grid">
+              <div className="workspace-stat-widget">
+                <span>Active Repairs</span>
+                <strong id="overview-active-repairs">{activeRepairsCount}</strong>
+                <small>In the shop queue</small>
+              </div>
+              <div className="workspace-stat-widget">
+                <span>Total Customers</span>
+                <strong id="overview-total-customers">{customers.length}</strong>
+                <small>Unique customers</small>
+              </div>
+              <div className="workspace-stat-widget">
+                <span>Staff Members</span>
+                <strong id="overview-staff-members">{staff.length}</strong>
+                <small id="overview-staff-capacity">{`${staff.length} of ${maxStaff} seats occupied`}</small>
+              </div>
+              <div className="workspace-stat-widget">
+                <span>Repair Revenue</span>
+                <strong id="overview-repair-revenue">₹{activeRevenue.toLocaleString()}</strong>
+                <small>Active ticket estimates</small>
               </div>
             </div>
-          </div>
 
-          {/* Card 2: Staff Capacity */}
-          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-800 bg-slate-900/90 shadow-lg group hover:border-indigo-500/40 transition">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Staff Capacity</span>
-                <div className="text-2xl sm:text-3xl font-black text-white mt-1">
-                  {staff.length} <span className="text-sm font-normal text-slate-400">/ {subscription?.plan?.maxStaff || 1}</span>
+            {/* Operations & Activity Grid */}
+            <div className="workspace-overview-grid">
+              {/* Left Surface: Operations / Repair Status */}
+              <div className="workspace-surface workspace-status-overview">
+                <div className="workspace-surface-heading">
+                  <div>
+                    <span className="workspace-eyebrow">OPERATIONS</span>
+                    <h2>Repair status</h2>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => setActiveTab('tickets')} 
+                    className="cursor-pointer hover:underline text-indigo-400"
+                  >
+                    View tickets <span>→</span>
+                  </button>
                 </div>
-                <span className="text-[11px] text-indigo-400 font-medium">Technicians on staff</span>
+                <div className="workspace-status-list">
+                  <div>
+                    <span className="status-dot status-dot-pending"></span>
+                    <span>Pending</span>
+                    <strong id="overview-status-pending">{statusCounts.pending}</strong>
+                  </div>
+                  <div>
+                    <span className="status-dot status-dot-progress"></span>
+                    <span>In Progress</span>
+                    <strong id="overview-status-progress">{statusCounts.progress}</strong>
+                  </div>
+                  <div>
+                    <span className="status-dot status-dot-complete"></span>
+                    <span>Completed</span>
+                    <strong id="overview-status-completed">{statusCounts.completed}</strong>
+                  </div>
+                  <div>
+                    <span className="status-dot status-dot-delivered"></span>
+                    <span>Delivered</span>
+                    <strong id="overview-status-delivered">{statusCounts.delivered}</strong>
+                  </div>
+                </div>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-400 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+
+              {/* Right Surface: Activity / Recent Repair Activity */}
+              <div className="workspace-surface">
+                <div className="workspace-surface-heading">
+                  <div>
+                    <span className="workspace-eyebrow">ACTIVITY</span>
+                    <h2>Recent repair activity</h2>
+                  </div>
+                </div>
+                <div id="overview-recent-activity" className="workspace-activity-list">
+                  {recentTickets.length === 0 ? (
+                    <div className="workspace-empty-state">No repair activity yet.</div>
+                  ) : (
+                    recentTickets.map(t => {
+                      const dotClass = t.status === 'IN_PROGRESS' 
+                        ? 'progress' 
+                        : t.status === 'COMPLETED' 
+                          ? 'complete' 
+                          : t.status === 'DELIVERED' 
+                            ? 'delivered' 
+                            : 'pending';
+                      return (
+                        <div key={t.id || t._id} className="workspace-activity-item">
+                          <span className={`status-dot status-dot-${dotClass}`}></span>
+                          <div>
+                            <strong>Ticket #{t.ticket_number} • {formatStatusLabel(t.status)}</strong>
+                            <small>
+                              {t.assigned_staff_name ? `Assigned to ${t.assigned_staff_name}` : 'No technician assigned'}
+                              {t.customer_name ? ` • ${t.customer_name}` : ''}
+                            </small>
+                          </div>
+                          <small>{new Date(t.updated_at || t.created_at || Date.now()).toLocaleDateString()}</small>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Card 3: Total Customers */}
-          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-800 bg-slate-900/90 shadow-lg group hover:border-cyan-500/40 transition">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Customers</span>
-                <div className="text-2xl sm:text-3xl font-black text-white mt-1">{customers.length}</div>
-                <span className="text-[11px] text-cyan-400 font-medium">Phone-verified CRM</span>
+            {/* Bottom Surface: Queue / Recent Repair Tickets */}
+            <div className="workspace-surface workspace-recent-tickets">
+              <div className="workspace-surface-heading">
+                <div>
+                  <span className="workspace-eyebrow">QUEUE</span>
+                  <h2>Recent repair tickets</h2>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => setActiveTab('tickets')} 
+                  className="cursor-pointer hover:underline text-indigo-400"
+                >
+                  Open queue <span>→</span>
+                </button>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-600 to-teal-400 text-white flex items-center justify-center shadow-lg shadow-cyan-500/25">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+              <div id="overview-recent-tickets" className="workspace-ticket-list">
+                {recentTickets.length === 0 ? (
+                  <div className="workspace-empty-state">No repair tickets yet. Start with a new intake.</div>
+                ) : (
+                  recentTickets.map(t => {
+                    const badgeClass = t.status === 'IN_PROGRESS' 
+                      ? 'is-progress' 
+                      : t.status === 'COMPLETED' 
+                        ? 'is-complete' 
+                        : t.status === 'DELIVERED' 
+                          ? 'is-delivered' 
+                          : '';
+                    return (
+                      <div key={t.id || t._id} className="workspace-ticket-item">
+                        <strong>#{t.ticket_number}</strong>
+                        <div>
+                          <strong>{t.customer_name || 'Walk-in Customer'}</strong>
+                          <small>{t.customer_phone || 'No phone added'}</small>
+                        </div>
+                        <div>
+                          <strong>{t.brand || ''} {t.model || ''}</strong>
+                          <small>{t.device_category || 'Device'}</small>
+                        </div>
+                        <span>{t.assigned_staff_name || 'Unassigned'}</span>
+                        <strong>₹{(t.estimated_cost || 0).toLocaleString()}</strong>
+                        <span className={`workspace-status-badge ${badgeClass}`}>
+                          {formatStatusLabel(t.status)}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
-          </div>
 
-          {/* Card 4: Repair Value */}
-          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-800 bg-slate-900/90 shadow-lg group hover:border-emerald-500/40 transition">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Repair Value</span>
-                <div className="text-2xl sm:text-3xl font-black text-white mt-1">₹{totalValue.toLocaleString()}</div>
-                <span className="text-[11px] text-emerald-400 font-medium">Estimated queue revenue</span>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
+          </section>
+        )}
 
-        {/* WORKSPACE NAVIGATION TABS */}
-        <div id="workspace-tabs-nav">
-          <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-slate-900/90 border border-slate-800 w-fit">
-            <button 
-              type="button"
-              onClick={() => setActiveTab('tickets')}
-              className={`px-4 sm:px-5 py-2.5 text-xs font-bold rounded-xl transition flex items-center gap-2 ${
-                activeTab === 'tickets'
-                  ? 'bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-md shadow-blue-500/25'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              <span>Repair Tickets ({tickets.length})</span>
-            </button>
-
-            <button 
-              type="button"
-              onClick={() => setActiveTab('customers')}
-              className={`px-4 sm:px-5 py-2.5 text-xs font-bold rounded-xl transition flex items-center gap-2 ${
-                activeTab === 'customers'
-                  ? 'bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-md shadow-blue-500/25'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              <span>Customer CRM ({customers.length})</span>
-            </button>
-
-            <button 
-              type="button"
-              onClick={() => setActiveTab('team')}
-              className={`px-4 sm:px-5 py-2.5 text-xs font-bold rounded-xl transition flex items-center gap-2 ${
-                activeTab === 'team'
-                  ? 'bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-md shadow-blue-500/25'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span>Team ({staff.length})</span>
-            </button>
-
-            <button 
-              type="button"
-              onClick={() => setActiveTab('subscription')}
-              className={`px-4 sm:px-5 py-2.5 text-xs font-bold rounded-xl transition flex items-center gap-2 ${
-                activeTab === 'subscription'
-                  ? 'bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-md shadow-blue-500/25'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-              </svg>
-              <span>Subscription & Plans</span>
-            </button>
-          </div>
-        </div>
-
-        {/* TAB 1: REPAIR TICKETS TABLE */}
+        {/* TAB 2: REPAIR TICKETS TABLE */}
         {activeTab === 'tickets' && (
-          <div id="tab-panel-tickets" className="space-y-4">
+          <div id="tab-panel-tickets" className="workspace-page-panel is-active space-y-5" style={{ display: 'block' }}>
+            
+            {/* Header with New Ticket Action */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#292F39]">
+              <div>
+                <h2 className="text-xl font-black text-white tracking-tight">Repair Tickets</h2>
+                <p className="text-xs text-slate-400 mt-0.5">Manage intake, diagnosis, technician updates, and delivery</p>
+              </div>
+              <button 
+                type="button"
+                onClick={onOpenNewTicketModal}
+                className="workspace-primary-action cursor-pointer hover:opacity-90 transition"
+              >
+                <span>+</span> New Repair Intake
+              </button>
+            </div>
+
             {/* Filter / Search Bar */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+            <div className="bg-[#15191F] border border-[#292F39] rounded-2xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
               <div className="relative flex-1">
                 <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -299,7 +495,7 @@ export default function ShopWorkspace({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by ticket #, customer name, phone, or device..." 
-                  className="w-full bg-slate-800/80 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-500"
+                  className="w-full bg-[#1B2028] border border-[#292F39] rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
@@ -310,10 +506,10 @@ export default function ShopWorkspace({
                     key={s}
                     type="button"
                     onClick={() => setStatusFilter(s)}
-                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition ${
+                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition cursor-pointer ${
                       statusFilter === s
-                        ? 'bg-sky-500 text-white'
-                        : 'bg-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-[#1B2028] text-slate-400 hover:text-white border border-[#292F39]'
                     }`}
                   >
                     {s === 'ALL' ? 'All Statuses' : formatStatusLabel(s)}
@@ -323,11 +519,11 @@ export default function ShopWorkspace({
             </div>
 
             {/* Table */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="bg-[#15191F] border border-[#292F39] rounded-2xl overflow-hidden shadow-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[11px] bg-slate-950/60 font-bold">
+                    <tr className="border-b border-[#292F39] text-slate-400 uppercase tracking-wider text-[11px] bg-[#101318] font-bold">
                       <th className="py-3.5 px-5">Ticket</th>
                       <th className="py-3.5 px-5">Customer</th>
                       <th className="py-3.5 px-5">Device</th>
@@ -338,21 +534,21 @@ export default function ShopWorkspace({
                       <th className="py-3.5 px-5 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60">
+                  <tbody className="divide-y divide-[#292F39]">
                     {filteredTickets.length === 0 ? (
                       <tr>
                         <td colSpan="8" className="py-12 text-center text-slate-400">
                           <p className="text-sm font-semibold text-white mb-1">No repair tickets found</p>
-                          <p className="text-xs">Create your first ticket by clicking "+ New Repair Ticket" above.</p>
+                          <p className="text-xs">Create your first ticket by clicking "+ New Repair Intake" above.</p>
                         </td>
                       </tr>
                     ) : (
                       filteredTickets.map(t => {
                         const statusPill = getStatusPill(t.status);
                         return (
-                          <tr key={t.id || t._id} className="hover:bg-slate-800/40 transition">
-                            <td className="py-4 px-5 font-mono font-bold text-sky-400">
-                              {t.ticket_number}
+                          <tr key={t.id || t._id} className="hover:bg-[#1B2028] transition">
+                            <td className="py-4 px-5 font-mono font-bold text-indigo-400">
+                              #{t.ticket_number}
                             </td>
                             <td className="py-4 px-5">
                               <div className="font-bold text-white">{t.customer_name}</div>
@@ -387,7 +583,7 @@ export default function ShopWorkspace({
                                 <button 
                                   type="button"
                                   onClick={() => onOpenTimelineModal(t)}
-                                  className="text-xs font-bold text-sky-400 hover:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 px-2.5 py-1.5 rounded-xl transition flex items-center gap-1"
+                                  className="text-xs font-bold text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 px-2.5 py-1.5 rounded-xl transition flex items-center gap-1 cursor-pointer"
                                   title="View Timeline History"
                                 >
                                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -399,7 +595,7 @@ export default function ShopWorkspace({
                                 <button 
                                   type="button"
                                   onClick={() => onDeleteTicket(t.id || t._id, t.ticket_number)}
-                                  className="text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 px-2.5 py-1.5 rounded-xl transition flex items-center gap-1"
+                                  className="text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 px-2.5 py-1.5 rounded-xl transition flex items-center gap-1 cursor-pointer"
                                   title="Delete Ticket"
                                 >
                                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -420,10 +616,17 @@ export default function ShopWorkspace({
           </div>
         )}
 
-        {/* TAB 2: CUSTOMER CRM */}
+        {/* TAB 3: CUSTOMER DIRECTORY */}
         {activeTab === 'customers' && (
-          <div id="tab-panel-customers" className="space-y-4">
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex items-center justify-between gap-4">
+          <div id="tab-panel-customers" className="workspace-page-panel is-active space-y-5" style={{ display: 'block' }}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#292F39]">
+              <div>
+                <h2 className="text-xl font-black text-white tracking-tight">Customer Directory</h2>
+                <p className="text-xs text-slate-400 mt-0.5">Phone-verified CRM records created automatically during intake</p>
+              </div>
+            </div>
+
+            <div className="bg-[#15191F] border border-[#292F39] rounded-2xl p-4 flex items-center justify-between gap-4">
               <div className="relative flex-1 max-w-md">
                 <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -433,7 +636,7 @@ export default function ShopWorkspace({
                   value={customerSearch}
                   onChange={(e) => setCustomerSearch(e.target.value)}
                   placeholder="Search customers by name or phone..." 
-                  className="w-full bg-slate-800/80 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-500"
+                  className="w-full bg-[#1B2028] border border-[#292F39] rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
                 />
               </div>
               <span className="text-xs text-slate-400 font-medium">
@@ -441,10 +644,10 @@ export default function ShopWorkspace({
               </span>
             </div>
 
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="bg-[#15191F] border border-[#292F39] rounded-2xl overflow-hidden shadow-xl">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[11px] bg-slate-950/60 font-bold">
+                  <tr className="border-b border-[#292F39] text-slate-400 uppercase tracking-wider text-[11px] bg-[#101318] font-bold">
                     <th className="py-3.5 px-5">Customer</th>
                     <th className="py-3.5 px-5">Phone Number</th>
                     <th className="py-3.5 px-5">Status</th>
@@ -452,7 +655,7 @@ export default function ShopWorkspace({
                     <th className="py-3.5 px-5 text-right">Last Interaction</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#292F39]">
                   {filteredCustomers.length === 0 ? (
                     <tr>
                       <td colSpan="5" className="py-12 text-center text-slate-400">
@@ -462,13 +665,13 @@ export default function ShopWorkspace({
                     </tr>
                   ) : (
                     filteredCustomers.map((c, idx) => {
-                      const initials = (c.default_name || 'C').substring(0, 2).toUpperCase();
+                      const custInitials = (c.default_name || 'C').substring(0, 2).toUpperCase();
                       return (
-                        <tr key={c.id || idx} className="hover:bg-slate-800/40 transition">
+                        <tr key={c.id || idx} className="hover:bg-[#1B2028] transition">
                           <td className="py-4 px-5">
                             <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-500 text-white font-bold text-xs flex items-center justify-center shadow-xs">
-                                {initials}
+                              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-500 text-white font-bold text-xs flex items-center justify-center shadow-xs">
+                                {custInitials}
                               </div>
                               <div className="font-bold text-white">{c.default_name}</div>
                             </div>
@@ -478,7 +681,7 @@ export default function ShopWorkspace({
                           </td>
                           <td className="py-4 px-5">
                             <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
-                              c.is_verified ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400 border border-slate-700'
+                              c.is_verified ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-zinc-800 text-slate-400 border border-zinc-700'
                             }`}>
                               {c.is_verified ? '✓ Phone Verified' : 'Intake Registered'}
                             </span>
@@ -499,33 +702,33 @@ export default function ShopWorkspace({
           </div>
         )}
 
-        {/* TAB 3: TEAM / STAFF */}
+        {/* TAB 4: STAFF & TEAM SEATS */}
         {activeTab === 'team' && (
-          <div id="tab-panel-team" className="space-y-6">
-            <div className="flex items-center justify-between">
+          <div id="tab-panel-team" className="workspace-page-panel is-active space-y-6" style={{ display: 'block' }}>
+            <div className="flex items-center justify-between pb-2 border-b border-[#292F39]">
               <div>
-                <h3 className="text-lg font-black text-white tracking-tight">Workshop Team</h3>
-                <p className="text-xs text-slate-400">Manage technicians, front desk staff, and repair managers</p>
+                <h2 className="text-xl font-black text-white tracking-tight">Workshop Team &amp; Seats</h2>
+                <p className="text-xs text-slate-400 mt-0.5">Manage technician accounts, front desk access, and seat quota</p>
               </div>
               <button 
                 type="button"
                 onClick={onOpenAddStaffModal}
-                className="bg-gradient-to-r from-sky-400 to-blue-600 hover:from-sky-500 hover:to-blue-700 text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/25 transition flex items-center gap-2"
+                className="workspace-primary-action cursor-pointer hover:opacity-90 transition"
               >
-                <span>+ Invite Staff Member</span>
+                <span>+</span> Invite Staff Member
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {staff.map((s, idx) => (
-                <div key={s.id || idx} className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-400 text-white font-bold text-base flex items-center justify-center shadow-md flex-shrink-0">
+                <div key={s.id || idx} className="bg-[#15191F] border border-[#292F39] rounded-2xl p-5 shadow-lg flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-500 text-white font-bold text-base flex items-center justify-center shadow-md flex-shrink-0">
                     {(s.name || 'S').charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <h4 className="font-bold text-white text-sm truncate">{s.name}</h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase tracking-wider">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase tracking-wider">
                         {s.role}
                       </span>
                     </div>
@@ -538,11 +741,16 @@ export default function ShopWorkspace({
           </div>
         )}
 
-        {/* TAB 4: SUBSCRIPTION & PLANS */}
+        {/* TAB 5: SHOP SETTINGS & PLANS */}
         {activeTab === 'subscription' && (
-          <div id="tab-panel-subscription" className="space-y-6">
-            {/* Current Quota Progress */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+          <div id="tab-panel-billing" className="workspace-page-panel is-active space-y-6" style={{ display: 'block' }}>
+            <div className="pb-2 border-b border-[#292F39]">
+              <h2 className="text-xl font-black text-white tracking-tight">Shop Settings &amp; Subscription Plans</h2>
+              <p className="text-xs text-slate-400 mt-0.5">Manage your active FixFlow SaaS tier, staff seats, and ticket quotas</p>
+            </div>
+
+            {/* Quota Progress */}
+            <div className="bg-[#15191F] border border-[#292F39] rounded-3xl p-6 sm:p-8 shadow-xl">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                 <div>
                   <h3 className="text-lg font-black text-white tracking-tight">Monthly Ticket Quota</h3>
@@ -552,15 +760,15 @@ export default function ShopWorkspace({
                       : `Free plan limit: 30 tickets per month.`}
                   </p>
                 </div>
-                <span className="text-xs font-mono font-bold text-sky-400 bg-sky-500/10 px-3 py-1.5 rounded-xl border border-sky-500/20">
+                <span className="text-xs font-mono font-bold text-indigo-400 bg-indigo-500/10 px-3 py-1.5 rounded-xl border border-indigo-500/20">
                   {isUnlimited ? `${ticketsUsed} tickets created` : `${ticketsUsed} / ${ticketLimit} used`}
                 </span>
               </div>
 
               {!isUnlimited && (
-                <div className="w-full bg-slate-800 h-3 rounded-full overflow-hidden p-0.5">
+                <div className="w-full bg-[#101318] h-3 rounded-full overflow-hidden p-0.5 border border-[#292F39]">
                   <div 
-                    className="bg-gradient-to-r from-sky-400 to-blue-600 h-full rounded-full transition-all duration-300" 
+                    className="bg-gradient-to-r from-indigo-500 to-sky-400 h-full rounded-full transition-all duration-300" 
                     style={{ width: `${Math.min(100, Math.round((ticketsUsed / ticketLimit) * 100))}%` }}
                   ></div>
                 </div>
@@ -607,15 +815,15 @@ export default function ShopWorkspace({
                 return (
                   <div 
                     key={plan.id}
-                    className={`bg-slate-900/90 rounded-2xl p-6 border flex flex-col justify-between transition ${
+                    className={`bg-[#15191F] rounded-2xl p-6 border flex flex-col justify-between transition ${
                       isActive 
-                        ? 'border-sky-500 shadow-lg shadow-sky-500/10' 
-                        : 'border-slate-800 hover:border-slate-700'
+                        ? 'border-indigo-500 shadow-lg shadow-indigo-500/10' 
+                        : 'border-[#292F39] hover:border-slate-700'
                     }`}
                   >
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-sky-400 bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-500/20">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20">
                           {plan.badge}
                         </span>
                         {plan.popular && (
@@ -637,10 +845,10 @@ export default function ShopWorkspace({
                       type="button"
                       disabled={isActive}
                       onClick={() => onSwitchPlan(plan.id)}
-                      className={`mt-6 w-full py-2.5 px-4 rounded-xl text-xs font-bold transition ${
+                      className={`mt-6 w-full py-2.5 px-4 rounded-xl text-xs font-bold transition cursor-pointer ${
                         isActive 
-                          ? 'bg-slate-800 text-slate-400 cursor-default border border-slate-700' 
-                          : 'bg-gradient-to-r from-sky-400 to-blue-600 hover:from-sky-500 hover:to-blue-700 text-white shadow-md shadow-blue-500/25'
+                          ? 'bg-[#1B2028] text-slate-400 cursor-default border border-[#292F39]' 
+                          : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-500/25'
                       }`}
                     >
                       {isActive ? 'Current Plan' : `Upgrade to ${plan.name}`}
@@ -649,6 +857,7 @@ export default function ShopWorkspace({
                 );
               })}
             </div>
+
           </div>
         )}
 
