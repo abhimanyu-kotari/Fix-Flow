@@ -1647,11 +1647,11 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; }
     }
 
     .workspace-sidebar-brand {
-      display: flex;
+      display: none;
     }
 
     #shop-view-container #workspace-sidebar .workspace-sidebar-brand {
-      display: flex;
+      display: none;
     }
 
     #workspace-sidebar #workspace-sidebar-toggle {

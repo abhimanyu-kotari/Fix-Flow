@@ -137,7 +137,7 @@ export default function ShopWorkspace({
   return (
     <div id="shop-view-container" className={`relative w-full overflow-hidden min-h-[calc(100vh-3.5rem)] ${sidebarCollapsed ? 'workspace-sidebar-collapsed' : ''}`}>
       
-      {/* 1: LEFT WORKSPACE SIDEBAR (Identical to Image 2) */}
+      {/* 1: LEFT WORKSPACE SIDEBAR */}
       <aside id="workspace-sidebar" aria-label="Workspace navigation">
         <button 
           id="workspace-sidebar-toggle" 
@@ -148,15 +148,6 @@ export default function ShopWorkspace({
         >
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
-
-        {/* Brand squircle & workspace title */}
-        <div className="workspace-sidebar-brand">
-          <div className="workspace-brand-mark">FF</div>
-          <div>
-            <strong>Fix Flow</strong>
-            <span>Repair workspace</span>
-          </div>
-        </div>
 
         {/* Main Workspace navigation links */}
         <div className="workspace-sidebar-section">

@@ -330,7 +330,6 @@ export default function App() {
             customerProfile={customerProfile}
             tickets={customerTickets}
             onDeleteTicket={handleDeleteCustomerTicket}
-            onLogout={handleCustomerLogout}
           />
         ) : (
           /* VIEW 3: PUBLIC LANDING & AUTH GATEWAY */
@@ -364,8 +363,8 @@ export default function App() {
         )}
       </main>
 
-      {/* Footer */}
-      <Footer />
+      {/* Footer (Only rendered on public landing page) */}
+      {!isShopActive && !isCustActive && <Footer onSwitchPortal={setPortal} />}
 
       {/* Modals */}
       <NewTicketModal 
