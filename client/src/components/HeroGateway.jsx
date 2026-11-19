@@ -173,8 +173,8 @@ export default function HeroGateway({
         {/* ======================================================== */}
         {portal === 'shop' && (
           <>
-            {/* LEFT COLUMN: AUTH FORM (38% on desktop) */}
-            <div className="w-full md:w-[42%] lg:w-[38%] p-6 sm:p-8 flex flex-col justify-center border-b md:border-b-0 md:border-r border-slate-100 bg-white relative transition-all duration-500">
+            {/* LEFT COLUMN: AUTH FORM (38% on desktop, full width on mobile) */}
+            <div className="w-full md:w-[42%] lg:w-[38%] p-6 sm:p-8 flex flex-col justify-center border-b-0 md:border-r border-slate-100 bg-white relative transition-all duration-500">
               {renderPortalSelector()}
 
               <div className="mb-4">
@@ -376,8 +376,8 @@ export default function HeroGateway({
               )}
             </div>
 
-            {/* RIGHT COLUMN: STOREFRONT PHOTOGRAPHY (62% on desktop) */}
-            <div id="gateway-visual" className="w-full md:w-[58%] lg:w-[62%] min-h-[360px] md:min-h-[520px] bg-slate-950 relative overflow-hidden">
+            {/* RIGHT COLUMN: STOREFRONT PHOTOGRAPHY (62% on desktop, hidden on mobile) */}
+            <div id="gateway-visual" className="hidden md:block md:w-[58%] lg:w-[62%] md:min-h-[520px] bg-slate-950 relative overflow-hidden">
               <img
                 id="gateway-visual-image"
                 src="/images/hero-shop.jpg"
@@ -399,8 +399,8 @@ export default function HeroGateway({
         {/* ======================================================== */}
         {portal === 'track' && (
           <>
-            {/* LEFT COLUMN: CUSTOMER PHOTOGRAPHY (62% on desktop) */}
-            <div id="gateway-visual" className="w-full md:w-[58%] lg:w-[62%] min-h-[360px] md:min-h-[520px] bg-slate-950 relative overflow-hidden order-2 md:order-1">
+            {/* LEFT COLUMN: CUSTOMER PHOTOGRAPHY (62% on desktop, hidden on mobile) */}
+            <div id="gateway-visual" className="hidden md:block md:w-[58%] lg:w-[62%] md:min-h-[520px] bg-slate-950 relative overflow-hidden order-2 md:order-1">
               <img
                 id="gateway-visual-image"
                 src="/images/hero-track.jpg"
@@ -413,8 +413,8 @@ export default function HeroGateway({
               </div>
             </div>
 
-            {/* RIGHT COLUMN: AUTH FORM (38% on desktop) */}
-            <div className="w-full md:w-[42%] lg:w-[38%] p-6 sm:p-8 flex flex-col justify-center border-b md:border-b-0 md:border-l border-slate-100 bg-white relative transition-all duration-500 order-1 md:order-2">
+            {/* RIGHT COLUMN: AUTH FORM (38% on desktop, full width on mobile) */}
+            <div className="w-full md:w-[42%] lg:w-[38%] p-6 sm:p-8 flex flex-col justify-center border-b-0 md:border-l border-slate-100 bg-white relative transition-all duration-500 order-1 md:order-2">
               {renderPortalSelector()}
 
               <div className="mb-4">

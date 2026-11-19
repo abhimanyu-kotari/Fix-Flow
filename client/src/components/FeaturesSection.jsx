@@ -4,9 +4,9 @@ export default function FeaturesSection() {
   return (
     <section id="features-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="text-center max-w-3xl mx-auto mb-12">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-black">Built for Independent Repairers & Franchises</h2>
-        <h3 className="text-3xl font-black text-slate-900 tracking-tight mt-1.5">Everything Your Shop Needs to Scale</h3>
-        <p className="text-slate-500 text-xs sm:text-sm mt-2">Replace clumsy spreadsheets, lost receipts, and constant customer phone calls.</p>
+        <h2 className="text-xs font-bold uppercase tracking-wider text-sky-400">Built for Independent Repairers &amp; Franchises</h2>
+        <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-1.5">Everything Your Shop Needs to Scale</h3>
+        <p className="text-slate-400 text-xs sm:text-sm mt-2">Replace clumsy spreadsheets, lost receipts, and constant customer phone calls.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

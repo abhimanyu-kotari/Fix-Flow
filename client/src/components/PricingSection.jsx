@@ -83,9 +83,9 @@ export default function PricingSection({ onSwitchPortal, onSelectPlan, currentPl
   return (
     <section id="pricing-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="text-center max-w-2xl mx-auto mb-10">
-        <span className="text-xs font-bold uppercase tracking-wider text-black">Transparent Subscriptions</span>
-        <h3 className="text-3xl font-black text-slate-900 tracking-tight mt-1">Start Free, Scale as You Grow</h3>
-        <p className="text-slate-500 text-xs sm:text-sm mt-1.5">Flexible plans for independent repair shops to multi-branch enterprises.</p>
+        <span className="text-xs font-bold uppercase tracking-wider text-sky-400">Transparent Subscriptions</span>
+        <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-1">Start Free, Scale as You Grow</h3>
+        <p className="text-slate-400 text-xs sm:text-sm mt-1.5">Flexible plans for independent repair shops to multi-branch enterprises.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
