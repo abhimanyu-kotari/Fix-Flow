@@ -73,9 +73,9 @@ function switchPortal(portal) {
 
   if (portal === 'shop') {
     if (btnShop) {
-      btnShop.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-white text-blue-600 shadow-xs';
+      btnShop.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-black text-white shadow-xs';
       btnShop.innerHTML = `
-        <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg class="w-4 h-4 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 9l1-5h16l1 5M3 9a3 3 0 006 0 3 3 0 006 0M3 9v11a1 1 0 001 1h16a1 1 0 001-1V9M9 21v-7a1 1 0 011-1h4a1 1 0 011 1v7" />
         </svg>
         <span>Shop Portal</span>
@@ -97,9 +97,9 @@ function switchPortal(portal) {
     if (leftSubtitle) leftSubtitle.textContent = "Don't have an account? Create your account, it takes less than a minute.";
   } else {
     if (btnTrack) {
-      btnTrack.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-white text-blue-600 shadow-xs';
+      btnTrack.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-black text-white shadow-xs';
       btnTrack.innerHTML = `
-        <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg class="w-4 h-4 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <rect x="5" y="2" width="14" height="20" rx="2" stroke-linecap="round" stroke-linejoin="round" />
           <line x1="12" y1="18" x2="12.01" y2="18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" />
         </svg>
@@ -206,7 +206,7 @@ function renderHeaderUserArea() {
       </div>
     `;
   } else {
-    // Logged out / Public Landing state: Seamless royal-blue header, hide both portal views
+    // Logged out / Public Landing state: Sleek black header, hide both portal views
     if (gateway) gateway.classList.remove('hidden');
     if (shopView) shopView.classList.add('hidden');
     if (trackView) trackView.classList.add('hidden');
@@ -214,7 +214,7 @@ function renderHeaderUserArea() {
     if (wsDash) wsDash.classList.add('hidden');
     const custDash = document.getElementById('cust-dashboard-screen');
     if (custDash) custDash.classList.add('hidden');
-    if (mainHeader) mainHeader.className = 'bg-[#162256]/90 backdrop-blur-md border-b border-white/10 sticky top-0 z-40 shadow-sm transition-colors duration-300';
+    if (mainHeader) mainHeader.className = 'bg-black/95 backdrop-blur-md border-b border-white/10 sticky top-0 z-40 shadow-sm transition-colors duration-300';
     if (landingNavLinks) landingNavLinks.className = 'hidden md:flex items-center gap-6 text-xs font-semibold text-white/80';
     if (brandTitle) {
       brandTitle.textContent = 'FixFlow';
@@ -222,15 +222,15 @@ function renderHeaderUserArea() {
     }
     if (brandBadge) {
       brandBadge.textContent = 'SaaS';
-      brandBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30';
+      brandBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-neutral-300 border border-white/20';
     }
     if (brandSubtitle) {
       brandSubtitle.textContent = 'Electronics Repair Operating System';
-      brandSubtitle.className = 'text-[11px] text-slate-300 -mt-0.5 font-medium';
+      brandSubtitle.className = 'text-[11px] text-neutral-400 -mt-0.5 font-medium';
     }
 
     container.innerHTML = `
-      <button onclick="document.getElementById('public-portal-gateway').scrollIntoView({behavior: 'smooth'})" class="bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-300 hover:to-blue-400 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md transition transform hover:-translate-y-0.5">
+      <button onclick="document.getElementById('public-portal-gateway').scrollIntoView({behavior: 'smooth'})" class="bg-white hover:bg-slate-100 text-black font-bold text-xs px-4 py-2 rounded-xl shadow-md transition transform hover:-translate-y-0.5">
         Sign In
       </button>
     `;
@@ -281,12 +281,12 @@ function toggleShopAuthMode(mode) {
   const subEl = document.getElementById('auth-main-subtitle');
 
   if (isLogin) {
-    if (btnLogin) btnLogin.className = 'text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-2 -mb-2.5 transition';
+    if (btnLogin) btnLogin.className = 'text-xs sm:text-sm font-bold text-black border-b-2 border-black pb-2 -mb-2.5 transition';
     if (btnReg) btnReg.className = 'text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-700 pb-2 -mb-2.5 transition';
     if (titleEl) titleEl.textContent = 'Welcome to login system';
     if (subEl) subEl.textContent = "Don't have an account? Create your account, it takes less than a minute";
   } else {
-    if (btnReg) btnReg.className = 'text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-2 -mb-2.5 transition';
+    if (btnReg) btnReg.className = 'text-xs sm:text-sm font-bold text-black border-b-2 border-black pb-2 -mb-2.5 transition';
     if (btnLogin) btnLogin.className = 'text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-700 pb-2 -mb-2.5 transition';
     if (titleEl) titleEl.textContent = 'Create Shop Workspace';
     if (subEl) subEl.textContent = 'Start on Free tier with unlimited repair tickets.';
@@ -1035,14 +1035,14 @@ function toggleCustAuthMode(mode) {
   const subEl = document.getElementById('cust-auth-subtitle');
 
   if (mode === 'login') {
-    if (btnLogin) btnLogin.className = 'text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-2 -mb-2.5 transition';
+    if (btnLogin) btnLogin.className = 'text-xs sm:text-sm font-bold text-black border-b-2 border-black pb-2 -mb-2.5 transition';
     if (btnReg) btnReg.className = 'text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-700 pb-2 -mb-2.5 transition';
     if (formLogin) formLogin.classList.remove('hidden');
     if (formReg) formReg.classList.add('hidden');
     if (titleEl) titleEl.textContent = 'Track Your Device Repair';
     if (subEl) subEl.textContent = 'Sign in with your mobile phone & password to see real-time repair status.';
   } else {
-    if (btnReg) btnReg.className = 'text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-2 -mb-2.5 transition';
+    if (btnReg) btnReg.className = 'text-xs sm:text-sm font-bold text-black border-b-2 border-black pb-2 -mb-2.5 transition';
     if (btnLogin) btnLogin.className = 'text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-700 pb-2 -mb-2.5 transition';
     if (formReg) formReg.classList.remove('hidden');
     if (formLogin) formLogin.classList.add('hidden');

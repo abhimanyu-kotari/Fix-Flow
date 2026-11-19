@@ -18,6 +18,8 @@ describe('MongoDB Multi-Tenant Schema & Isolation', () => {
   before(async () => {
     dbUri = `mongodb://127.0.0.1:27017/fixflow_test_db_${Date.now()}`;
     await connectMongo(dbUri);
+    await Customer.init();
+    await ShopCustomer.init();
   });
 
   after(async () => {
