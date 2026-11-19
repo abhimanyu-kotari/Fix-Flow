@@ -1,14 +1,20 @@
 {
   "name": "fixflow",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "FixFlow — Smart Electronics Repair Workspace & Customer Portal (MERN Stack)",
+  "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "test": "node --test test/**/*.test.js"
+    "test": "node --test test/**/*.test.js",
+    "build": "npm --prefix client install && npm --prefix client run build"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "mern",
+    "repair-shop",
+    "electronics-repair",
+    "saas"
+  ],
+  "author": "Abhimanyu Kotari",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {

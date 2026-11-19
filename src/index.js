@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const env = require('./config/env');
 const { connectMongo } = require('./models');
 const { PLANS } = require('./config/plans');
@@ -38,7 +39,14 @@ function createApp() {
     });
   });
 
-  // Serve Static Frontend Assets
+  // Static Frontend Assets:
+  // 1. Prioritize React (MERN) Client Build if available
+  const clientDist = path.join(__dirname, '../client/dist');
+  if (fs.existsSync(clientDist)) {
+    app.use(express.static(clientDist));
+  }
+
+  // 2. Fallback / Public static assets (guarantees test assertions & legacy static paths)
   app.use(express.static(path.join(__dirname, 'public')));
 
   // Route Modules
@@ -50,7 +58,18 @@ function createApp() {
   app.use('/api/subscription', subscriptionRoutes);
   app.use('/api/features', premiumRoutes);
 
-  // 404 Handler
+  // SPA Fallback for non-API client GET requests
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' || req.path.startsWith('/api')) {
+      return next();
+    }
+    if (fs.existsSync(path.join(clientDist, 'index.html'))) {
+      return res.sendFile(path.join(clientDist, 'index.html'));
+    }
+    res.sendFile(path.join(__dirname, 'public/index.html'));
+  });
+
+  // 404 Handler for unhandled API routes
   app.use((req, res) => {
     res.status(404).json({ error: 'Endpoint not found.' });
   });
