@@ -1025,6 +1025,83 @@ function previewCanonicalPhone(val) {
   }
 }
 
+// Toggle between Customer Sign In and Customer Create Password
+function toggleCustAuthMode(mode) {
+  const btnLogin = document.getElementById('cust-tab-signin-btn');
+  const btnReg = document.getElementById('cust-tab-register-btn');
+  const formLogin = document.getElementById('cust-login-form');
+  const formReg = document.getElementById('cust-register-form');
+  const titleEl = document.getElementById('cust-auth-title');
+  const subEl = document.getElementById('cust-auth-subtitle');
+
+  if (mode === 'login') {
+    if (btnLogin) btnLogin.className = 'text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-2 -mb-2.5 transition';
+    if (btnReg) btnReg.className = 'text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-700 pb-2 -mb-2.5 transition';
+    if (formLogin) formLogin.classList.remove('hidden');
+    if (formReg) formReg.classList.add('hidden');
+    if (titleEl) titleEl.textContent = 'Track Your Device Repair';
+    if (subEl) subEl.textContent = 'Sign in with your mobile phone & password to see real-time repair status.';
+  } else {
+    if (btnReg) btnReg.className = 'text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-2 -mb-2.5 transition';
+    if (btnLogin) btnLogin.className = 'text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-700 pb-2 -mb-2.5 transition';
+    if (formReg) formReg.classList.remove('hidden');
+    if (formLogin) formLogin.classList.add('hidden');
+    if (titleEl) titleEl.textContent = 'Create Customer Password';
+    if (subEl) subEl.textContent = 'Set a password to easily track your device repairs anytime with zero OTP.';
+  }
+}
+
+async function handleCustomerLogin(e) {
+  e.preventDefault();
+  const phone = document.getElementById('cust-login-phone').value;
+  const password = document.getElementById('cust-login-password').value;
+
+  try {
+    const res = await fetch('/api/track/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+
+    state.customerToken = data.token;
+    localStorage.setItem('ff_cust_token', data.token);
+
+    showToast(`Welcome, ${data.customer.name}!`, 'success');
+    renderHeaderUserArea();
+    loadCustomerDashboard();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function handleCustomerRegister(e) {
+  e.preventDefault();
+  const phone = document.getElementById('cust-reg-phone').value;
+  const name = document.getElementById('cust-reg-name').value;
+  const password = document.getElementById('cust-reg-password').value;
+
+  try {
+    const res = await fetch('/api/track/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, name, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to set password');
+
+    state.customerToken = data.token;
+    localStorage.setItem('ff_cust_token', data.token);
+
+    showToast(data.message || 'Password saved! Logged in.', 'success');
+    renderHeaderUserArea();
+    loadCustomerDashboard();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
 async function handleCustomerRequestOtp() {
   const phone = document.getElementById('track-phone-input').value;
   if (!phone) {
@@ -1333,7 +1410,7 @@ function customerLogout() {
   if (custDash) custDash.classList.add('hidden');
   const trackView = document.getElementById('track-view-container');
   if (trackView) trackView.classList.add('hidden');
-  resetCustomerOtpStage();
+  toggleCustAuthMode('login');
   switchPortal('track');
   renderHeaderUserArea();
   showToast('Signed out of FixFlow Track.', 'info');

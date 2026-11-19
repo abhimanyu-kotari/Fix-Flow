@@ -307,4 +307,53 @@ describe('Phase 4: FixFlow Track Customer Portal & Phone OTP Engine (MongoDB)', 
     const remainingData = await remainingRes.json();
     assert.equal(remainingData.count, ticketsData.count - 1);
   });
+
+  test('POST /api/track/register and POST /api/track/login supports zero-OTP customer password tracking', async () => {
+    // 1. Register customer with password
+    const regRes = await fetch(`${baseUrl}/api/track/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: '9591560751',
+        name: 'Abhimanyu Kotari',
+        password: 'CustomerPass123'
+      })
+    });
+    const regData = await regRes.json();
+    assert.equal(regRes.status, 200);
+    assert.equal(regData.success, true);
+    assert.ok(regData.token);
+    assert.equal(regData.customer.name, 'Abhimanyu Kotari');
+
+    // 2. Reject login with wrong password
+    const failLoginRes = await fetch(`${baseUrl}/api/track/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: '9591560751',
+        password: 'WrongPassword'
+      })
+    });
+    assert.equal(failLoginRes.status, 401);
+
+    // 3. Login with correct password
+    const loginRes = await fetch(`${baseUrl}/api/track/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: '9591560751',
+        password: 'CustomerPass123'
+      })
+    });
+    const loginData = await loginRes.json();
+    assert.equal(loginRes.status, 200);
+    assert.equal(loginData.success, true);
+    assert.ok(loginData.token);
+
+    // 4. Verify authenticated session can access tickets
+    const ticketsRes = await fetch(`${baseUrl}/api/track/tickets`, {
+      headers: { Authorization: `Bearer ${loginData.token}` }
+    });
+    assert.equal(ticketsRes.status, 200);
+  });
 });

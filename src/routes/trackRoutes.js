@@ -2,9 +2,116 @@ const express = require('express');
 const { requestOtp, verifyOtp } = require('../services/otpService');
 const { deleteCustomerTicket } = require('../services/ticketService');
 const { authenticateCustomer } = require('../middleware/customerAuth');
-const { RepairTicket } = require('../models');
+const { RepairTicket, Customer } = require('../models');
+const { normalizePhone } = require('../utils/phone');
+const { hashPassword, comparePassword, signToken } = require('../utils/crypto');
 
 const router = express.Router();
+
+/**
+ * Customer Password Login
+ * POST /api/track/login
+ */
+router.post('/login', async (req, res) => {
+  try {
+    const { phone, password } = req.body;
+    if (!phone || !password) {
+      return res.status(400).json({ success: false, error: 'Mobile phone number and password are required.' });
+    }
+    const phoneRes = normalizePhone(phone);
+    if (!phoneRes.isValid) {
+      return res.status(400).json({ success: false, error: 'Invalid phone number format.' });
+    }
+    const customer = await Customer.findOne({ phoneE164: phoneRes.e164 });
+    if (!customer) {
+      return res.status(404).json({ success: false, error: 'No account found for this phone number. Please click "Create / Set Password" to register.' });
+    }
+    if (!customer.passwordHash) {
+      return res.status(400).json({ success: false, error: 'No password set for this account yet. Please switch to "Create / Set Password" to set your password.' });
+    }
+    const isMatch = await comparePassword(password, customer.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, error: 'Invalid phone number or password.' });
+    }
+
+    const token = signToken({
+      customerId: customer._id.toString(),
+      phone: customer.phoneE164,
+      type: 'customer'
+    }, '30d');
+
+    res.json({
+      success: true,
+      message: 'Signed in successfully.',
+      token,
+      customer: {
+        id: customer._id.toString(),
+        phone: customer.phoneE164,
+        name: customer.defaultName,
+        isVerified: customer.isVerified
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * Customer Create / Set Password
+ * POST /api/track/register
+ */
+router.post('/register', async (req, res) => {
+  try {
+    const { phone, password, name } = req.body;
+    if (!phone || !password) {
+      return res.status(400).json({ success: false, error: 'Mobile phone number and password are required.' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters long.' });
+    }
+    const phoneRes = normalizePhone(phone);
+    if (!phoneRes.isValid) {
+      return res.status(400).json({ success: false, error: 'Invalid phone number format.' });
+    }
+    const phoneE164 = phoneRes.e164;
+    const passwordHash = await hashPassword(password);
+
+    let customer = await Customer.findOne({ phoneE164 });
+    if (customer) {
+      customer.passwordHash = passwordHash;
+      if (name && name.trim()) customer.defaultName = name.trim();
+      customer.isVerified = true;
+      await customer.save();
+    } else {
+      customer = await Customer.create({
+        phoneE164,
+        defaultName: name && name.trim() ? name.trim() : 'Valued Customer',
+        passwordHash,
+        isVerified: true
+      });
+    }
+
+    const token = signToken({
+      customerId: customer._id.toString(),
+      phone: customer.phoneE164,
+      type: 'customer'
+    }, '30d');
+
+    res.json({
+      success: true,
+      message: 'Password saved and logged in successfully.',
+      token,
+      customer: {
+        id: customer._id.toString(),
+        phone: customer.phoneE164,
+        name: customer.defaultName,
+        isVerified: true
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 /**
  * Request OTP for customer phone authentication
