@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function PricingSection({ onSwitchPortal, currentPlanId, onSwitchPlan, shopToken }) {
+export default function PricingSection({ onSwitchPortal, onSelectPlan, currentPlanId, onSwitchPlan, shopToken }) {
   const plans = [
     {
       id: 'free',
@@ -68,11 +68,16 @@ export default function PricingSection({ onSwitchPortal, currentPlanId, onSwitch
   const handleAction = (planId) => {
     if (shopToken && onSwitchPlan) {
       onSwitchPlan(planId);
-    } else {
-      onSwitchPortal('shop');
-      const el = document.getElementById('public-portal-gateway');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      return;
     }
+    if (onSelectPlan) {
+      onSelectPlan(planId);
+    }
+    if (onSwitchPortal) {
+      onSwitchPortal('shop');
+    }
+    const el = document.getElementById('public-portal-gateway');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -90,7 +95,7 @@ export default function PricingSection({ onSwitchPortal, currentPlanId, onSwitch
             <div 
               key={plan.id}
               className={`bg-white rounded-3xl p-6 shadow-sm flex flex-col justify-between relative ${
-                plan.popular ? 'border-2 border-black shadow-md' : 'border border-black'
+                plan.popular ? 'border-2 border-black shadow-md' : 'border border-slate-200'
               }`}
             >
               {plan.popular && (
@@ -118,12 +123,13 @@ export default function PricingSection({ onSwitchPortal, currentPlanId, onSwitch
               </div>
 
               <button 
+                type="button"
                 onClick={() => handleAction(plan.id)}
                 disabled={isCurrent}
                 className={`mt-6 w-full py-2.5 rounded-xl text-xs font-bold transition ${
                   isCurrent 
                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default'
-                    : 'bg-black hover:bg-zinc-800 text-white'
+                    : 'bg-black hover:bg-zinc-800 text-white cursor-pointer'
                 }`}
               >
                 {isCurrent ? 'Current Plan' : (plan.id === 'free' ? 'Get Started Free' : `Upgrade to ${plan.name}`)}

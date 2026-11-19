@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 
-export default function ShowcaseSection({ onDemoLogin, onSwitchPortal }) {
+export default function ShowcaseSection({ onDemoLogin, onTryDemo, onSwitchPortal }) {
   const [activeTab, setActiveTab] = useState('shop');
+  const launchDemo = onDemoLogin || onTryDemo;
 
   return (
     <section id="showcase-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -25,7 +26,7 @@ export default function ShowcaseSection({ onDemoLogin, onSwitchPortal }) {
             
             <div className="pt-2 flex flex-wrap gap-3">
               <button 
-                onClick={onDemoLogin} 
+                onClick={launchDemo} 
                 className="bg-gradient-to-r from-zinc-800 to-black hover:from-black hover:to-zinc-800 text-white font-bold text-xs py-3 px-5 rounded-2xl shadow-lg shadow-black/30 transition transform hover:-translate-y-0.5 flex items-center gap-2"
               >
                 <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">

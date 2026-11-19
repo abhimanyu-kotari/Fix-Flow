@@ -58,11 +58,14 @@ export default function App() {
     try {
       // Load workspace
       const wsData = await api.getWorkspace(currentToken);
-      setWorkspace(wsData.workspace);
+      setWorkspace(prev => ({ ...(wsData.workspace || {}), role: prev?.role || 'OWNER' }));
 
       // Load profile
       const profData = await api.getProfile(currentToken);
-      setRepairerProfile(profData.repairer);
+      if (profData.user) {
+        setRepairerProfile(profData.user);
+        setWorkspace(prev => ({ ...(prev || {}), role: profData.user.role }));
+      }
 
       // Load tickets
       const tkData = await api.getTickets(currentToken);
@@ -80,10 +83,11 @@ export default function App() {
       const subData = await api.getSubscription(currentToken);
       setSubscription(subData);
     } catch (err) {
-      if (err.message && (err.message.includes('Authentication') || err.message.includes('expired') || err.message.includes('invalid'))) {
+      if (err.message && (err.message.includes('Authentication') || err.message.includes('expired') || err.message.includes('invalid') || err.message.includes('token'))) {
         localStorage.removeItem('ff_shop_token');
         setShopToken('');
         setWorkspace(null);
+        setRepairerProfile(null);
       }
     }
   }, [shopToken]);
@@ -100,10 +104,11 @@ export default function App() {
       const tkData = await api.getCustomerTickets(currentToken);
       setCustomerTickets(tkData.tickets || []);
     } catch (err) {
-      if (err.message && (err.message.includes('Authentication') || err.message.includes('expired') || err.message.includes('invalid'))) {
+      if (err.message && (err.message.includes('Authentication') || err.message.includes('expired') || err.message.includes('invalid') || err.message.includes('token'))) {
         localStorage.removeItem('ff_cust_token');
         setCustomerToken('');
         setCustomerProfile(null);
+        setCustomerTickets([]);
       }
     }
   }, [customerToken]);
@@ -123,19 +128,28 @@ export default function App() {
     const data = await api.shopLogin(email, password);
     localStorage.setItem('ff_shop_token', data.token);
     setShopToken(data.token);
-    setWorkspace(data.workspace);
+    setRepairerProfile(data.user);
+    setWorkspace({ ...data.workspace, role: data.user?.role || 'OWNER' });
     setPortal('shop');
-    showToast(`Welcome back, ${data.workspace.name}!`, 'success');
+    showToast(`Welcome back, ${data.user?.name || data.workspace?.name}!`, 'success');
     await loadShopData(data.token);
   };
 
   const handleShopRegister = async (payload) => {
-    const data = await api.shopRegister(payload);
+    const data = await api.shopRegister({
+      shopName: payload.shopName || payload.name,
+      name: payload.name || payload.ownerName,
+      email: payload.email || payload.ownerEmail,
+      password: payload.password || payload.ownerPassword,
+      shopPhone: payload.phone || payload.shopPhone,
+      shopAddress: payload.address || payload.shopAddress
+    });
     localStorage.setItem('ff_shop_token', data.token);
     setShopToken(data.token);
-    setWorkspace(data.workspace);
+    setRepairerProfile(data.user);
+    setWorkspace({ ...data.workspace, role: data.user?.role || 'OWNER' });
     setPortal('shop');
-    showToast(`Workspace ${data.workspace.name} created successfully!`, 'success');
+    showToast(`Workspace ${data.workspace?.name || 'created'} successfully!`, 'success');
     await loadShopData(data.token);
   };
 
@@ -144,7 +158,8 @@ export default function App() {
       const data = await api.demoLogin();
       localStorage.setItem('ff_shop_token', data.token);
       setShopToken(data.token);
-      setWorkspace(data.workspace);
+      setRepairerProfile(data.user);
+      setWorkspace({ ...data.workspace, role: data.user?.role || 'OWNER' });
       setPortal('shop');
       showToast('Signed in to Live Demo Shop Workspace!', 'success');
       await loadShopData(data.token);
@@ -172,7 +187,7 @@ export default function App() {
     setCustomerToken(data.token);
     setCustomerProfile(data.customer);
     setPortal('track');
-    showToast(`Welcome back, ${data.customer.name}!`, 'success');
+    showToast(`Welcome, ${data.customer.name}!`, 'success');
     await loadCustomerData(data.token);
   };
 
@@ -330,11 +345,20 @@ export default function App() {
               showToast={showToast}
             />
             <FeaturesSection />
-            <ShowcaseSection onTryDemo={handleDemoLogin} />
-            <PricingSection onSelectPlan={() => {
-              const el = document.getElementById('public-portal-gateway');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }} />
+            <ShowcaseSection 
+              onTryDemo={handleDemoLogin} 
+              onSwitchPortal={setPortal}
+            />
+            <PricingSection 
+              onSwitchPortal={setPortal}
+              onSelectPlan={() => {
+                const el = document.getElementById('public-portal-gateway');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              currentPlanId={subscription?.plan?.id || 'free'}
+              onSwitchPlan={handleSwitchPlan}
+              shopToken={shopToken}
+            />
           </div>
         )}
       </main>

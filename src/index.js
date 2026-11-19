@@ -39,7 +39,14 @@ function createApp() {
     });
   });
 
-  // Static Frontend Assets — serve original HTML/JS/CSS from src/public/
+  // Static Frontend Assets:
+  // 1. Prioritize React (MERN) Client Build if available
+  const clientDist = path.join(__dirname, '../client/dist');
+  if (fs.existsSync(clientDist)) {
+    app.use(express.static(clientDist));
+  }
+
+  // 2. Public static assets (guarantees test assertions for /app.js & image assets)
   app.use(express.static(path.join(__dirname, 'public')));
 
   // Route Modules
@@ -51,10 +58,14 @@ function createApp() {
   app.use('/api/subscription', subscriptionRoutes);
   app.use('/api/features', premiumRoutes);
 
-  // SPA Fallback for non-API client GET requests
+  // SPA Fallback for non-API client GET requests — serve React client
   app.use((req, res, next) => {
     if (req.method !== 'GET' || req.path.startsWith('/api')) {
       return next();
+    }
+    const clientIndex = path.join(clientDist, 'index.html');
+    if (fs.existsSync(clientIndex)) {
+      return res.sendFile(clientIndex);
     }
     res.sendFile(path.join(__dirname, 'public/index.html'));
   });

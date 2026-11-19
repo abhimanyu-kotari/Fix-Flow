@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "test": "node --test test/**/*.test.js",
-    "build": "echo FixFlow assets verified",
+    "build": "npm --prefix client install && npm --prefix client run build",
     "build:client": "npm --prefix client install && npm --prefix client run build"
   },
   "keywords": [
