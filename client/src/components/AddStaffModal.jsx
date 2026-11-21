@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function AddStaffModal({ isOpen, onClose, onAddStaff, showToast }) {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,14 +39,14 @@ export default function AddStaffModal({ isOpen, onClose, onAddStaff, showToast }
               </svg>
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900 tracking-tight">Invite Staff Member</h3>
+              <h3 className="text-lg font-black text-slate-900 tracking-tight">{t('ws_invite_staff')}</h3>
               <p className="text-xs text-slate-500">Assign technician or manager credentials</p>
             </div>
           </div>
           <button 
             type="button"
             onClick={onClose} 
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center font-bold text-sm transition"
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center font-bold text-sm transition cursor-pointer"
           >
             ✕
           </button>
@@ -52,57 +54,60 @@ export default function AddStaffModal({ isOpen, onClose, onAddStaff, showToast }
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">{t('your_name')}</label>
             <input 
               type="text" 
+              required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              required 
-              placeholder="Staff Name" 
-              className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-2.5 text-xs text-slate-900 shadow-xs focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:outline-none transition font-medium"
+              placeholder="e.g. Ramesh Kumar" 
+              className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-2.5 text-xs text-slate-900 shadow-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition"
             />
           </div>
+
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
             <input 
               type="email" 
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required 
-              placeholder="technician@shop.com" 
-              className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-2.5 text-xs text-slate-900 shadow-xs focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:outline-none transition font-medium"
+              placeholder="ramesh@repairshop.com" 
+              className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-2.5 text-xs text-slate-900 shadow-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition"
             />
           </div>
+
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Temporary Password</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">{t('password_min6')}</label>
             <input 
               type="password" 
+              required
+              minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required 
               placeholder="••••••••" 
-              className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-2.5 text-xs text-slate-900 shadow-xs focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:outline-none transition font-medium"
+              className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-2.5 text-xs text-slate-900 shadow-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition"
             />
           </div>
+
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Role & Permissions</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Role &amp; Permissions</label>
             <select 
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-2.5 text-xs text-slate-900 shadow-xs focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:outline-none transition font-bold"
+              className="w-full bg-white border border-slate-200/90 rounded-2xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition"
             >
-              <option value="TECHNICIAN">Technician (Update tickets & view status)</option>
-              <option value="STAFF">Desk Staff (Intake & customer management)</option>
-              <option value="MANAGER">Shop Manager (Full workspace access)</option>
+              <option value="TECHNICIAN">Technician (View &amp; Update Assigned Tickets)</option>
+              <option value="OWNER">Shop Co-Owner / Manager (Full Access)</option>
             </select>
           </div>
 
           <button 
             type="submit" 
             disabled={submitting}
-            className="w-full bg-gradient-to-r from-[#3B66D6] to-[#00A8FF] hover:from-[#3255B8] hover:to-[#0096E6] text-white font-bold tracking-wider text-xs uppercase py-3.5 rounded-2xl shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 mt-2 disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold tracking-wider text-xs uppercase py-3.5 rounded-2xl shadow-lg shadow-indigo-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 mt-2 disabled:opacity-50 cursor-pointer"
           >
-            {submitting ? 'Creating Staff Account...' : 'Create Staff Account'}
+            {submitting ? 'Inviting...' : t('ws_invite_staff')}
           </button>
         </form>
       </div>

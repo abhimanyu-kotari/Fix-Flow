@@ -1,13 +1,16 @@
 import React from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function PricingSection({ onSwitchPortal, onSelectPlan, currentPlanId, onSwitchPlan, shopToken }) {
+  const { t } = useLanguage();
+
   const plans = [
     {
       id: 'free',
       name: 'Free Forever',
       badge: 'Free Forever',
       price: '₹0',
-      period: '/mo',
+      period: t('mo'),
       desc: 'Ideal for solo repairers and single-counter shops.',
       features: [
         'Up to 30 Repair Tickets/mo',
@@ -21,7 +24,7 @@ export default function PricingSection({ onSwitchPortal, onSelectPlan, currentPl
       name: 'Starter',
       badge: 'Starter',
       price: '₹199',
-      period: '/mo',
+      period: t('mo'),
       desc: 'Perfect for small repair shops adding apprentices & technicians.',
       features: [
         'Unlimited Repair Tickets',
@@ -36,7 +39,7 @@ export default function PricingSection({ onSwitchPortal, onSelectPlan, currentPl
       name: 'Pro',
       badge: 'Pro',
       price: '₹499',
-      period: '/mo',
+      period: t('mo'),
       desc: 'For busy repair businesses managing spare parts & warranties.',
       features: [
         'Unlimited Repair Tickets',
@@ -52,7 +55,7 @@ export default function PricingSection({ onSwitchPortal, onSelectPlan, currentPl
       name: 'Business',
       badge: 'Business',
       price: '₹999',
-      period: '/mo',
+      period: t('mo'),
       desc: 'For multi-location repair enterprises & franchise chains.',
       features: [
         'Unlimited Repair Tickets',
@@ -66,7 +69,7 @@ export default function PricingSection({ onSwitchPortal, onSelectPlan, currentPl
   ];
 
   const handleAction = (planId) => {
-    if (shopToken && onSwitchPlan) {
+    if (onSwitchPlan) {
       onSwitchPlan(planId);
       return;
     }
@@ -83,9 +86,9 @@ export default function PricingSection({ onSwitchPortal, onSelectPlan, currentPl
   return (
     <section id="pricing-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="text-center max-w-2xl mx-auto mb-10">
-        <span className="text-xs font-bold uppercase tracking-wider text-sky-400">Transparent Subscriptions</span>
-        <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-1">Start Free, Scale as You Grow</h3>
-        <p className="text-slate-400 text-xs sm:text-sm mt-1.5">Flexible plans for independent repair shops to multi-branch enterprises.</p>
+        <span className="text-xs font-bold uppercase tracking-wider text-sky-400">{t('pricing_eyebrow')}</span>
+        <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-1">{t('pricing_title')}</h3>
+        <p className="text-slate-400 text-xs sm:text-sm mt-1.5">{t('pricing_subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -100,7 +103,7 @@ export default function PricingSection({ onSwitchPortal, onSelectPlan, currentPl
             >
               {plan.popular && (
                 <span className="absolute -top-3 right-6 bg-black text-white text-[10px] font-black uppercase px-3 py-0.5 rounded-full shadow-xs">
-                  Popular
+                  {t('popular_badge')}
                 </span>
               )}
 
@@ -132,7 +135,7 @@ export default function PricingSection({ onSwitchPortal, onSelectPlan, currentPl
                     : 'bg-black hover:bg-zinc-800 text-white cursor-pointer'
                 }`}
               >
-                {isCurrent ? 'Current Plan' : (plan.id === 'free' ? 'Get Started Free' : `Upgrade to ${plan.name}`)}
+                {isCurrent ? t('current_plan') : (plan.id === 'free' ? 'Get Started Free' : t('upgrade_to', { plan: plan.name }))}
               </button>
             </div>
           );

@@ -264,9 +264,21 @@ export default function App() {
   // Plan switch
   const handleSwitchPlan = async (targetPlanId) => {
     try {
-      const data = await api.switchPlan(targetPlanId, shopToken);
-      showToast(`Switched plan to ${data.subscription.plan.name}!`, 'success');
-      await loadShopData(shopToken);
+      let token = shopToken;
+      if (!token) {
+        const demo = await api.demoLogin();
+        localStorage.setItem('ff_shop_token', demo.token);
+        setShopToken(demo.token);
+        token = demo.token;
+        setRepairerProfile(demo.user);
+        setWorkspace({ ...demo.workspace, role: demo.user?.role || 'OWNER' });
+        setPortal('shop');
+      }
+      const data = await api.switchPlan(targetPlanId, token);
+      setSubscription(data);
+      const planName = data?.currentPlan?.name || data?.subscription?.plan?.name || targetPlanId.toUpperCase();
+      showToast(`Workspace plan switched to ${planName}!`, 'success');
+      await loadShopData(token);
     } catch (err) {
       showToast(err.message, 'error');
     }
@@ -355,7 +367,7 @@ export default function App() {
                 const el = document.getElementById('public-portal-gateway');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
-              currentPlanId={subscription?.plan?.id || 'free'}
+              currentPlanId={subscription?.currentPlan?.id || subscription?.subscription?.planId || 'free'}
               onSwitchPlan={handleSwitchPlan}
               shopToken={shopToken}
             />

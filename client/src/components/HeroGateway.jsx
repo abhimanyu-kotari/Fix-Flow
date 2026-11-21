@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function HeroGateway({
   portal = 'shop',
@@ -10,6 +11,7 @@ export default function HeroGateway({
   onCustomerRegister,
   showToast
 }) {
+  const { t } = useLanguage();
   const [shopAuthMode, setShopAuthMode] = useState('login'); // 'login' | 'register'
   const [custAuthMode, setCustAuthMode] = useState('login'); // 'login' | 'register'
 
@@ -106,7 +108,7 @@ export default function HeroGateway({
         id="gateway-btn-shop"
         type="button"
         onClick={() => onSwitchPortal('shop')}
-        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all ${
+        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
           portal === 'shop'
             ? 'bg-black text-white shadow-xs'
             : 'text-slate-500 hover:text-slate-800'
@@ -115,14 +117,14 @@ export default function HeroGateway({
         <svg className={`w-4 h-4 flex-shrink-0 ${portal === 'shop' ? 'text-white' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 9l1-5h16l1 5M3 9a3 3 0 006 0 3 3 0 006 0M3 9v11a1 1 0 001 1h16a1 1 0 001-1V9M9 21v-7a1 1 0 011-1h4a1 1 0 011 1v7" />
         </svg>
-        <span>Shop Portal</span>
+        <span>{t('shop_portal')}</span>
       </button>
 
       <button
         id="gateway-btn-track"
         type="button"
         onClick={() => onSwitchPortal('track')}
-        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all ${
+        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
           portal === 'track'
             ? 'bg-black text-white shadow-xs'
             : 'text-slate-500 hover:text-slate-800'
@@ -132,7 +134,7 @@ export default function HeroGateway({
           <rect x="5" y="2" width="14" height="20" rx="2" strokeLinecap="round" strokeLinejoin="round" />
           <line x1="12" y1="18" x2="12.01" y2="18" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <span>Track Repair</span>
+        <span>{t('track_repair')}</span>
       </button>
     </div>
   );
@@ -152,17 +154,17 @@ export default function HeroGateway({
       {/* Hero Headline & Intro */}
       <div className="max-w-4xl mx-auto text-center text-white mb-10 relative z-10">
         <h1 className="hero-title text-3xl sm:text-5xl font-black tracking-tight leading-tight drop-shadow-sm">
-          <span className="hero-line">Manage Repairs Faster.</span><br />
+          <span className="hero-line">{t('hero_title_1')}</span><br />
           <span className="hero-line hero-line-secondary text-transparent bg-clip-text bg-gradient-to-r from-neutral-200 via-white to-neutral-400">
-            Build Trust with Every Customer.
+            {t('hero_title_2')}
           </span>
         </h1>
         <p className="text-neutral-300 text-xs sm:text-sm mt-3.5 max-w-2xl mx-auto leading-relaxed font-normal">
-          Fast counter intake with flexible non-compulsory fields, automatic phone deduplication across your branches, and zero-password customer repair tracking.
+          {t('hero_desc')}
         </p>
       </div>
 
-      {/* MAIN EXECUTIVE AUTH CARD — Matching Screenshot 2 (38% Form / 62% Image) */}
+      {/* MAIN EXECUTIVE AUTH CARD (38% Form / 62% Image on desktop; clean full-width without image on mobile) */}
       <div
         id="gateway-auth-card"
         className="max-w-5xl mx-auto bg-white rounded-[36px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col md:flex-row relative z-10 border border-neutral-800/20"
@@ -179,10 +181,10 @@ export default function HeroGateway({
 
               <div className="mb-4">
                 <h2 id="auth-main-title" className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">
-                  Manage repairs faster
+                  {t('manage_repairs_faster')}
                 </h2>
                 <p id="auth-main-subtitle" className="text-xs text-slate-400 mt-1.5">
-                  Build trust with everyone.
+                  {t('build_trust')}
                 </p>
               </div>
 
@@ -192,32 +194,32 @@ export default function HeroGateway({
                   type="button"
                   id="auth-tab-signin-btn"
                   onClick={() => setShopAuthMode('login')}
-                  className={`text-xs sm:text-sm font-bold pb-2 -mb-2.5 transition ${
+                  className={`text-xs sm:text-sm font-bold pb-2 -mb-2.5 transition cursor-pointer ${
                     shopAuthMode === 'login'
                       ? 'text-black border-b-2 border-black'
                       : 'text-slate-400 hover:text-slate-700'
                   }`}
                 >
-                  Sign In to Shop
+                  {t('sign_in_to_shop')}
                 </button>
                 <button
                   type="button"
                   id="auth-tab-register-btn"
                   onClick={() => setShopAuthMode('register')}
-                  className={`text-xs sm:text-sm font-semibold pb-2 -mb-2.5 transition ${
+                  className={`text-xs sm:text-sm font-semibold pb-2 -mb-2.5 transition cursor-pointer ${
                     shopAuthMode === 'register'
                       ? 'text-black border-b-2 border-black'
                       : 'text-slate-400 hover:text-slate-700'
                   }`}
                 >
-                  Create Workspace
+                  {t('create_workspace')}
                 </button>
               </div>
 
               {/* 1A: SHOP LOGIN FORM */}
               {shopAuthMode === 'login' ? (
                 <form id="shop-login-form" onSubmit={handleShopLoginSubmit} className="space-y-4">
-                  {/* Email Input with User Silhouette Icon */}
+                  {/* Email Input */}
                   <div className="relative flex items-center bg-white border border-slate-200/90 rounded-2xl px-4 py-3.5 shadow-xs focus-within:border-black focus-within:ring-2 focus-within:ring-black/10 transition">
                     <svg className="w-5 h-5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -228,12 +230,12 @@ export default function HeroGateway({
                       required
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="owner@repairshop.com"
+                      placeholder={t('email_placeholder')}
                       className="w-full bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none ml-3 font-medium"
                     />
                   </div>
 
-                  {/* Password Input with Lock Icon and Eye Toggle */}
+                  {/* Password Input */}
                   <div className="relative flex items-center bg-white border border-slate-200/90 rounded-2xl px-4 py-3.5 shadow-xs focus-within:border-black focus-within:ring-2 focus-within:ring-black/10 transition">
                     <svg className="w-5 h-5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -244,14 +246,14 @@ export default function HeroGateway({
                       required
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="••••••••••"
+                      placeholder={t('password_placeholder')}
                       className="w-full bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none ml-3 font-medium tracking-wide"
                     />
                     <button
                       type="button"
                       onClick={() => setShowLoginPassword(!showLoginPassword)}
                       title="Show/Hide Password"
-                      className="text-slate-400 hover:text-slate-600 focus:outline-none ml-2"
+                      className="text-slate-400 hover:text-slate-600 focus:outline-none ml-2 cursor-pointer"
                     >
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         {showLoginPassword ? (
@@ -275,24 +277,24 @@ export default function HeroGateway({
                         onChange={(e) => setRememberMe(e.target.checked)}
                         className="w-4 h-4 rounded text-black border-slate-300 focus:ring-black"
                       />
-                      <span>Remember me</span>
+                      <span>{t('remember_me')}</span>
                     </label>
                     <button
                       type="button"
                       onClick={() => showToast('Password reset is managed by shop owner via Workspace Settings.', 'info')}
-                      className="text-slate-400 hover:text-black font-semibold transition"
+                      className="text-slate-400 hover:text-black font-semibold transition cursor-pointer"
                     >
-                      Forgot Password?
+                      {t('forgot_password')}
                     </button>
                   </div>
 
-                  {/* Solid Black Action Button */}
+                  {/* Action Button */}
                   <button
                     type="submit"
                     disabled={submitting}
                     className="w-full bg-gradient-to-r from-black via-zinc-900 to-black hover:from-zinc-900 hover:to-zinc-800 text-white font-bold tracking-widest text-xs uppercase py-3.5 rounded-2xl shadow-lg shadow-black/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
                   >
-                    <span>{submitting ? 'SIGNING IN...' : 'LOGIN'}</span>
+                    <span>{submitting ? t('signing_in') : t('login_btn')}</span>
                   </button>
                 </form>
               ) : (
@@ -304,7 +306,7 @@ export default function HeroGateway({
                       required
                       value={regShopName}
                       onChange={(e) => setRegShopName(e.target.value)}
-                      placeholder="Shop / Business Name"
+                      placeholder={t('shop_name_placeholder')}
                       className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none font-medium"
                     />
                   </div>
@@ -316,7 +318,7 @@ export default function HeroGateway({
                         required
                         value={regOwnerName}
                         onChange={(e) => setRegOwnerName(e.target.value)}
-                        placeholder="Owner Full Name"
+                        placeholder={t('owner_name_placeholder')}
                         className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none font-medium"
                       />
                     </div>
@@ -326,7 +328,7 @@ export default function HeroGateway({
                         required
                         value={regOwnerEmail}
                         onChange={(e) => setRegOwnerEmail(e.target.value)}
-                        placeholder="Owner Email"
+                        placeholder={t('owner_email_placeholder')}
                         className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none font-medium"
                       />
                     </div>
@@ -340,7 +342,7 @@ export default function HeroGateway({
                         minLength={6}
                         value={regOwnerPassword}
                         onChange={(e) => setRegOwnerPassword(e.target.value)}
-                        placeholder="Password (min 6)"
+                        placeholder={t('password_min6')}
                         className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none font-medium"
                       />
                     </div>
@@ -349,7 +351,7 @@ export default function HeroGateway({
                         type="tel"
                         value={regShopPhone}
                         onChange={(e) => setRegShopPhone(e.target.value)}
-                        placeholder="Contact Mobile"
+                        placeholder={t('contact_mobile')}
                         className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none font-medium"
                       />
                     </div>
@@ -360,7 +362,7 @@ export default function HeroGateway({
                       type="text"
                       value={regShopAddress}
                       onChange={(e) => setRegShopAddress(e.target.value)}
-                      placeholder="Shop Address (e.g. 12 Brigade Road)"
+                      placeholder={t('shop_address_placeholder')}
                       className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none font-medium"
                     />
                   </div>
@@ -370,7 +372,7 @@ export default function HeroGateway({
                     disabled={submitting}
                     className="w-full bg-gradient-to-r from-black via-zinc-900 to-black hover:from-zinc-900 hover:to-zinc-800 text-white font-bold tracking-widest text-xs uppercase py-3.5 rounded-2xl shadow-lg shadow-black/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 cursor-pointer"
                   >
-                    <span>{submitting ? 'CREATING...' : 'CREATE WORKSPACE & START FREE'}</span>
+                    <span>{submitting ? t('creating') : t('create_workspace_btn')}</span>
                   </button>
                 </form>
               )}
@@ -385,7 +387,6 @@ export default function HeroGateway({
                 className="absolute inset-0 w-full h-full object-cover object-center"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 pointer-events-none"></div>
-              {/* Subtle decorative sparkle in bottom right matching Screenshot 2 */}
               <div className="absolute bottom-5 right-5 text-white/40 pointer-events-none text-2xl select-none">
                 ✦
               </div>
@@ -419,10 +420,10 @@ export default function HeroGateway({
 
               <div className="mb-4">
                 <h2 id="cust-auth-title" className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">
-                  Track Your Device Repair
+                  {t('track_title')}
                 </h2>
                 <p id="cust-auth-subtitle" className="text-xs text-slate-400 mt-1.5">
-                  Sign in with your mobile phone &amp; password to see real-time repair status.
+                  {t('track_subtitle')}
                 </p>
               </div>
 
@@ -432,25 +433,25 @@ export default function HeroGateway({
                   type="button"
                   id="cust-tab-signin-btn"
                   onClick={() => setCustAuthMode('login')}
-                  className={`text-xs sm:text-sm font-bold pb-2 -mb-2.5 transition ${
+                  className={`text-xs sm:text-sm font-bold pb-2 -mb-2.5 transition cursor-pointer ${
                     custAuthMode === 'login'
                       ? 'text-black border-b-2 border-black'
                       : 'text-slate-400 hover:text-slate-700'
                   }`}
                 >
-                  Sign In
+                  {t('nav_sign_in')}
                 </button>
                 <button
                   type="button"
                   id="cust-tab-register-btn"
                   onClick={() => setCustAuthMode('register')}
-                  className={`text-xs sm:text-sm font-semibold pb-2 -mb-2.5 transition ${
+                  className={`text-xs sm:text-sm font-semibold pb-2 -mb-2.5 transition cursor-pointer ${
                     custAuthMode === 'register'
                       ? 'text-black border-b-2 border-black'
                       : 'text-slate-400 hover:text-slate-700'
                   }`}
                 >
-                  Create / Set Password
+                  {t('create_set_password')}
                 </button>
               </div>
 
@@ -468,7 +469,7 @@ export default function HeroGateway({
                       required
                       value={custPhone}
                       onChange={(e) => setCustPhone(e.target.value)}
-                      placeholder="Mobile Number (e.g. 9591560751)"
+                      placeholder={t('enter_phone')}
                       className="w-full bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none ml-3 font-medium"
                     />
                   </div>
@@ -484,14 +485,14 @@ export default function HeroGateway({
                       required
                       value={custPassword}
                       onChange={(e) => setCustPassword(e.target.value)}
-                      placeholder="••••••••••"
+                      placeholder={t('password_placeholder')}
                       className="w-full bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none ml-3 font-medium tracking-wide"
                     />
                     <button
                       type="button"
                       onClick={() => setShowCustPassword(!showCustPassword)}
                       title="Show/Hide Password"
-                      className="text-slate-400 hover:text-slate-600 focus:outline-none ml-2"
+                      className="text-slate-400 hover:text-slate-600 focus:outline-none ml-2 cursor-pointer"
                     >
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         {showCustPassword ? (
@@ -513,7 +514,7 @@ export default function HeroGateway({
                       onClick={() => setCustAuthMode('register')}
                       className="text-black hover:text-zinc-700 font-bold transition cursor-pointer"
                     >
-                      Create / Set Password →
+                      {t('create_set_password')} →
                     </button>
                   </div>
 
@@ -522,7 +523,7 @@ export default function HeroGateway({
                     disabled={submitting}
                     className="w-full bg-gradient-to-r from-black via-zinc-900 to-black hover:from-zinc-900 hover:to-zinc-800 text-white font-bold tracking-widest text-xs uppercase py-3.5 rounded-2xl shadow-lg shadow-black/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
                   >
-                    <span>{submitting ? 'VERIFYING...' : 'SIGN IN & TRACK REPAIR'}</span>
+                    <span>{submitting ? 'VERIFYING...' : t('sign_in_track')}</span>
                   </button>
                 </form>
               ) : (
@@ -535,7 +536,7 @@ export default function HeroGateway({
                       required
                       value={custRegPhone}
                       onChange={(e) => setCustRegPhone(e.target.value)}
-                      placeholder="Customer Mobile Number (e.g. 9591560751)"
+                      placeholder={t('enter_phone')}
                       className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none font-medium"
                     />
                   </div>
@@ -546,7 +547,7 @@ export default function HeroGateway({
                       id="cust-reg-name"
                       value={custRegName}
                       onChange={(e) => setCustRegName(e.target.value)}
-                      placeholder="Your Full Name (optional)"
+                      placeholder={t('your_name')}
                       className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none font-medium"
                     />
                   </div>
@@ -559,7 +560,7 @@ export default function HeroGateway({
                       minLength={6}
                       value={custRegPassword}
                       onChange={(e) => setCustRegPassword(e.target.value)}
-                      placeholder="Create Password (min 6 chars)"
+                      placeholder={t('password_min6')}
                       className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none font-medium"
                     />
                   </div>
@@ -573,7 +574,7 @@ export default function HeroGateway({
                     disabled={submitting}
                     className="w-full bg-gradient-to-r from-black via-zinc-900 to-black hover:from-zinc-900 hover:to-zinc-800 text-white font-bold tracking-widest text-xs uppercase py-3.5 rounded-2xl shadow-lg shadow-black/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 cursor-pointer"
                   >
-                    <span>{submitting ? 'SETTING UP...' : 'SET PASSWORD & VIEW REPAIRS'}</span>
+                    <span>{submitting ? 'SETTING UP...' : t('set_password_track')}</span>
                   </button>
                 </form>
               )}

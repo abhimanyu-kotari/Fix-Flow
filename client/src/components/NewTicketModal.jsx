@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function NewTicketModal({
   isOpen,
@@ -8,6 +9,7 @@ export default function NewTicketModal({
   staffList = [],
   showToast
 }) {
+  const { t } = useLanguage();
   const [phone, setPhone] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [deviceCategory, setDeviceCategory] = useState('Smartphone');
@@ -68,14 +70,14 @@ export default function NewTicketModal({
               </svg>
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900 tracking-tight">New Repair Intake</h3>
+              <h3 className="text-lg font-black text-slate-900 tracking-tight">{t('ws_new_intake_btn')}</h3>
               <p className="text-xs text-slate-500">Fast counter entry with non-compulsory fields &amp; E.164 linking</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center font-bold text-sm transition"
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center font-bold text-sm transition cursor-pointer"
           >
             ✕
           </button>
@@ -93,7 +95,7 @@ export default function NewTicketModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3.5">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Customer Mobile</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">{t('enter_phone')}</label>
               <input
                 type="tel"
                 value={phone}
@@ -103,7 +105,7 @@ export default function NewTicketModal({
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Customer Name</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">{t('your_name')}</label>
               <input
                 type="text"
                 value={customerName}
@@ -152,7 +154,7 @@ export default function NewTicketModal({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Issue Description</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">{t('ws_issue_col')}</label>
             <textarea
               rows={2}
               value={issueDescription}
@@ -164,7 +166,7 @@ export default function NewTicketModal({
 
           <div className="grid grid-cols-2 gap-3.5">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Estimated Cost (₹)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">{t('ws_cost_col')} (₹)</label>
               <input
                 type="number"
                 min="0"
@@ -175,7 +177,7 @@ export default function NewTicketModal({
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Assign Technician</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">{t('ws_tech_col')}</label>
               <select
                 value={assignedUserId}
                 onChange={(e) => setAssignedUserId(e.target.value)}
@@ -196,7 +198,7 @@ export default function NewTicketModal({
             disabled={submitting}
             className="w-full bg-gradient-to-r from-[#3B66D6] to-[#00A8FF] hover:from-[#3255B8] hover:to-[#0096E6] text-white font-bold tracking-wider text-xs uppercase py-3.5 rounded-2xl shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 mt-2 disabled:opacity-50 cursor-pointer"
           >
-            {submitting ? 'Creating Ticket...' : 'Create Repair Ticket'}
+            {submitting ? 'Creating Ticket...' : t('ws_new_intake_btn')}
           </button>
         </form>
 

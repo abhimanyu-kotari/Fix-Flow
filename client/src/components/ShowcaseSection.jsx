@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ShowcaseSection({ onDemoLogin, onTryDemo, onSwitchPortal }) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('shop');
   const launchDemo = onDemoLogin || onTryDemo;
 
@@ -15,38 +17,38 @@ export default function ShowcaseSection({ onDemoLogin, onTryDemo, onSwitchPortal
           {/* Left Info */}
           <div className="lg:col-span-5 space-y-4">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-neutral-300 text-[11px] font-bold tracking-wider uppercase border border-white/10">
-              <span>⚡ Dual-Portal Platform</span>
+              <span>{t('showcase_badge')}</span>
             </span>
             <h3 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
-              Built for Both Sides of the Repair Counter.
+              {t('showcase_title')}
             </h3>
             <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-              Shop owners run high-velocity intake, assign technicians, and track revenue. Customers receive instant verification via OTP and follow their device repair live with full transparency.
+              {t('showcase_desc')}
             </p>
             
             <div className="pt-2 flex flex-wrap gap-3">
               <button 
                 onClick={launchDemo} 
-                className="bg-gradient-to-r from-zinc-800 to-black hover:from-black hover:to-zinc-800 text-white font-bold text-xs py-3 px-5 rounded-2xl shadow-lg shadow-black/30 transition transform hover:-translate-y-0.5 flex items-center gap-2"
+                className="bg-gradient-to-r from-zinc-800 to-black hover:from-black hover:to-zinc-800 text-white font-bold text-xs py-3 px-5 rounded-2xl shadow-lg shadow-black/30 transition transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer"
               >
                 <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                <span>Launch Demo Workspace</span>
+                <span>{t('launch_demo')}</span>
               </button>
               <button 
                 onClick={() => {
-                  onSwitchPortal('track');
+                  if (onSwitchPortal) onSwitchPortal('track');
                   const el = document.getElementById('public-portal-gateway');
                   if (el) el.scrollIntoView({ behavior: 'smooth' });
                 }} 
-                className="bg-white/10 hover:bg-white/20 text-white font-bold text-xs py-3 px-5 rounded-2xl border border-white/20 transition flex items-center gap-2"
+                className="bg-white/10 hover:bg-white/20 text-white font-bold text-xs py-3 px-5 rounded-2xl border border-white/20 transition flex items-center gap-2 cursor-pointer"
               >
                 <svg className="w-4 h-4 text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <rect x="5" y="2" width="14" height="20" rx="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <line x1="12" y1="18" x2="12.01" y2="18" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" />
+                  <line x1="12" y1="18" x2="12.01" y2="18" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span>Test Customer Tracking</span>
+                <span>{t('track_demo')}</span>
               </button>
             </div>
           </div>
@@ -63,19 +65,19 @@ export default function ShowcaseSection({ onDemoLogin, onTryDemo, onSwitchPortal
               <div className="flex items-center bg-slate-100 p-1 rounded-xl text-[11px] font-bold">
                 <button 
                   onClick={() => setActiveTab('shop')} 
-                  className={`px-2.5 py-1 rounded-lg transition ${
+                  className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
                     activeTab === 'shop' ? 'bg-white text-black shadow-xs' : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
-                  Shop Queue
+                  {t('preview_shop_tab')}
                 </button>
                 <button 
                   onClick={() => setActiveTab('cust')} 
-                  className={`px-2.5 py-1 rounded-lg transition ${
+                  className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
                     activeTab === 'cust' ? 'bg-white text-black shadow-xs' : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
-                  Customer Stepper
+                  {t('preview_track_tab')}
                 </button>
               </div>
             </div>
@@ -92,7 +94,7 @@ export default function ShowcaseSection({ onDemoLogin, onTryDemo, onSwitchPortal
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">In Progress</span>
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">{t('status_in_progress')}</span>
                     <div className="text-xs font-mono font-bold text-emerald-600 mt-0.5">₹4,500</div>
                   </div>
                 </div>
@@ -101,51 +103,72 @@ export default function ShowcaseSection({ onDemoLogin, onTryDemo, onSwitchPortal
                   <div className="flex items-center gap-3">
                     <span className="font-mono font-bold text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md">#FF-1002</span>
                     <div>
-                      <div className="text-xs font-bold text-slate-900">Pooja Nair • MacBook Air M2</div>
-                      <div className="text-[11px] text-slate-500">Tech: Priya • Battery replacement</div>
+                      <div className="text-xs font-bold text-slate-900">Pooja Patel • MacBook Air M2</div>
+                      <div className="text-[11px] text-slate-500">Tech: Anita (Assigned) • Battery Replacement</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Completed</span>
-                    <div className="text-xs font-mono font-bold text-emerald-600 mt-0.5">₹6,800</div>
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">{t('status_diagnosing')}</span>
+                    <div className="text-xs font-mono font-bold text-emerald-600 mt-0.5">₹7,200</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono font-bold text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md">#FF-1003</span>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900">Vikram Singh • Samsung Galaxy S23</div>
+                      <div className="text-[11px] text-slate-500">Tech: Ramesh (Assigned) • USB-C Port Replaced</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">{t('status_completed')}</span>
+                    <div className="text-xs font-mono font-bold text-emerald-600 mt-0.5">₹1,800</div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Showcase View B: Customer 5-Stage Stepper Preview */}
+            {/* Showcase View B: Customer Stepper Preview */}
             {activeTab === 'cust' && (
-              <div className="mt-4 space-y-3">
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-2">
-                    <span>Device: iPhone 14 Pro</span>
-                    <span className="text-blue-600 font-mono">Stage 3 of 5</span>
+              <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-mono text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">#FF-1001</span>
+                    <h5 className="font-bold text-slate-900 text-sm mt-1">Apple iPhone 14 Pro</h5>
+                    <p className="text-[11px] text-slate-500">Apex Repair Hub • Brigade Road Branch</p>
                   </div>
-                  {/* Stepper Bar */}
-                  <div className="grid grid-cols-5 gap-1.5 text-center text-[10px] font-bold">
-                    <div className="bg-emerald-500 text-white py-1 rounded-md">Received ✓</div>
-                    <div className="bg-emerald-500 text-white py-1 rounded-md">Diagnosing ✓</div>
-                    <div className="bg-blue-600 text-white py-1 rounded-md animate-pulse">Repairing</div>
-                    <div className="bg-slate-200 text-slate-500 py-1 rounded-md">Ready</div>
-                    <div className="bg-slate-200 text-slate-500 py-1 rounded-md">Delivered</div>
+                  <div className="text-right">
+                    <span className="text-xs font-mono font-bold text-slate-900">₹4,500</span>
+                    <div className="text-[10px] text-slate-400 font-medium">Estimated Total</div>
                   </div>
                 </div>
-                <div className="bg-blue-50 border border-blue-100 p-2.5 rounded-xl text-[11px] text-blue-800 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span>Assigned Technician: <strong>Ramesh (+91 98765 00000)</strong></span>
-                  </span>
-                  <span className="font-bold text-blue-600">Direct Call Link</span>
+
+                {/* Stepper Bar */}
+                <div className="space-y-1.5 pt-2">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-500">
+                    <span className="text-emerald-600">{t('cp_intake')}</span>
+                    <span className="text-emerald-600">{t('cp_diagnosis')}</span>
+                    <span className="text-emerald-600 font-black">{t('cp_in_repair')}</span>
+                    <span>{t('cp_ready_pickup')}</span>
+                    <span>{t('cp_delivered')}</span>
+                  </div>
+                  <div className="h-2 bg-slate-200 rounded-full overflow-hidden p-0.5">
+                    <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full" style={{ width: '60%' }}></div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-3 rounded-xl border border-slate-200/60 text-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="font-medium text-slate-700">Display panel in final testing on workbench</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-mono">14 mins ago</span>
                 </div>
               </div>
             )}
-
           </div>
         </div>
-
       </div>
     </section>
   );

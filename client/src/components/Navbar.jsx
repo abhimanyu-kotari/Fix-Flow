@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Navbar({
   portal,
@@ -11,14 +12,15 @@ export default function Navbar({
   onCustomerLogout,
   onSwitchPortal
 }) {
+  const { language, setLanguage, t, supportedLanguages } = useLanguage();
   const [shopMenuOpen, setShopMenuOpen] = useState(false);
   const [custMenuOpen, setCustMenuOpen] = useState(false);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
 
   const isShopLoggedIn = portal === 'shop' && shopToken && workspace;
   const isCustLoggedIn = portal === 'track' && customerToken;
   const isLoggedIn = isShopLoggedIn || isCustLoggedIn;
 
-  // Always bg-black/95 on landing; stay dark when logged in too (matches original)
   const headerBg = 'bg-black/95 backdrop-blur-md border-b border-white/10 sticky top-0 z-40 shadow-sm transition-colors duration-300';
 
   const brandTitle = isShopLoggedIn ? 'FixFlow' : (isCustLoggedIn ? 'FixFlow Track' : 'Fix Flow');
@@ -31,17 +33,15 @@ export default function Navbar({
 
   const brandSubtitle = isShopLoggedIn
     ? 'Active Repair Operations Center'
-    : (isCustLoggedIn ? 'Real-time Repair Milestone Tracking' : 'Electronics Repair Operating System');
+    : (isCustLoggedIn ? 'Real-time Repair Milestone Tracking' : t('brand_subtitle'));
 
-  const initials = isShopLoggedIn
-    ? (workspace?.name || 'WS').substring(0, 2).toUpperCase()
-    : 'FF';
+  const currentLangObj = supportedLanguages.find(l => l.code === language) || supportedLanguages[0];
 
   return (
     <header id="main-header" className={headerBg}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
-        {/* Brand Logo — black squircle, NOT blue */}
+        {/* Brand Logo — black squircle */}
         <a
           href="/"
           onClick={(e) => {
@@ -71,17 +71,62 @@ export default function Navbar({
         {/* Public Landing Navigation Links */}
         {!isLoggedIn && (
           <nav id="landing-nav-links" className="hidden md:flex items-center gap-6 text-xs font-semibold text-white/80">
-            <a href="#features-section" className="hover:text-white transition">Features</a>
-            <a href="#showcase-section" className="hover:text-white transition">How It Works</a>
-            <a href="#pricing-section" className="hover:text-white transition">Pricing</a>
+            <a href="#features-section" className="hover:text-white transition">{t('nav_features')}</a>
+            <a href="#showcase-section" className="hover:text-white transition">{t('nav_how_it_works')}</a>
+            <a href="#pricing-section" className="hover:text-white transition">{t('nav_pricing')}</a>
           </nav>
         )}
 
         {/* Right Header Actions */}
-        <div id="header-user-area" className="flex items-center gap-3">
-          {/* Note: In Shop Workspace, user profile is exclusively displayed in the left sidebar footer as requested */}
+        <div id="header-user-area" className="flex items-center gap-2.5 sm:gap-3">
 
-          {/* Customer logged in */}
+          {/* Multilingual Selector Dropdown */}
+          <div className="relative">
+            <button
+              id="lang-selector-btn"
+              type="button"
+              onClick={() => setLangMenuOpen(!langMenuOpen)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-medium transition cursor-pointer select-none"
+              title={t('select_language')}
+            >
+              <span className="text-sm">🌐</span>
+              <span className="hidden sm:inline font-semibold">{currentLangObj?.nativeName || 'English'}</span>
+              <svg className={`w-3 h-3 text-slate-400 transition-transform ${langMenuOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {langMenuOpen && (
+              <div
+                id="lang-dropdown-menu"
+                className="absolute right-0 mt-2 w-48 max-h-80 overflow-y-auto bg-zinc-900 border border-zinc-700/60 rounded-2xl shadow-2xl p-2 z-50 text-xs backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150"
+              >
+                <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-neutral-400 border-b border-zinc-800 mb-1">
+                  {t('select_language')}
+                </div>
+                {supportedLanguages.map((l) => (
+                  <button
+                    key={l.code}
+                    type="button"
+                    onClick={() => {
+                      setLanguage(l.code);
+                      setLangMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition cursor-pointer ${
+                      language === l.code
+                        ? 'bg-sky-500/20 text-sky-300 font-bold border border-sky-500/30'
+                        : 'text-neutral-300 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <span>{l.nativeName}</span>
+                    <span className="text-[10px] text-neutral-400 font-normal">{l.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Customer logged in Profile Dropdown */}
           {isCustLoggedIn && (
             <div className="relative">
               <div
@@ -106,15 +151,15 @@ export default function Navbar({
                     <p className="text-xs font-bold text-white">{customerSession?.name || 'Customer'}</p>
                     <p className="text-[11px] text-emerald-400 font-mono mt-0.5">{customerSession?.phone}</p>
                     <span className="inline-block mt-2 text-[10px] font-extrabold uppercase px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full">
-                      Verified Customer
+                      {t('verified_customer')}
                     </span>
                   </div>
                   <div className="pt-3">
                     <button
                       onClick={() => { setCustMenuOpen(false); onCustomerLogout(); }}
-                      className="w-full text-center py-2 px-3 text-xs font-bold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 rounded-xl transition"
+                      className="w-full text-center py-2 px-3 text-xs font-bold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 rounded-xl transition cursor-pointer"
                     >
-                      Sign Out
+                      {t('nav_sign_out')}
                     </button>
                   </div>
                 </div>
@@ -129,9 +174,9 @@ export default function Navbar({
                 const el = document.getElementById('public-portal-gateway');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="bg-white hover:bg-slate-100 text-black font-bold text-xs px-5 py-2 rounded-xl shadow-md transition transform hover:-translate-y-0.5"
+              className="bg-white hover:bg-slate-100 text-black font-bold text-xs px-5 py-2 rounded-xl shadow-md transition transform hover:-translate-y-0.5 cursor-pointer"
             >
-              Sign In
+              {t('nav_sign_in')}
             </button>
           )}
         </div>
