@@ -21,7 +21,9 @@ export default function Navbar({
   const isCustLoggedIn = portal === 'track' && customerToken;
   const isLoggedIn = isShopLoggedIn || isCustLoggedIn;
 
-  const headerBg = 'bg-black/95 backdrop-blur-md border-b border-white/10 sticky top-0 z-40 shadow-sm transition-colors duration-300';
+  const headerBg = isShopLoggedIn
+    ? 'bg-black/95 backdrop-blur-md border-b border-white/10 sticky top-0 z-40 shadow-sm transition-colors duration-300 ff-shop-header'
+    : 'bg-black/95 backdrop-blur-md border-b border-white/10 sticky top-0 z-40 shadow-sm transition-colors duration-300';
 
   const brandTitle = isShopLoggedIn ? 'FixFlow' : (isCustLoggedIn ? 'FixFlow Track' : 'Fix Flow');
 
@@ -39,7 +41,7 @@ export default function Navbar({
 
   return (
     <header id="main-header" className={headerBg}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${isShopLoggedIn ? 'h-14' : 'h-16'} flex items-center justify-between`}>
 
         {/* Brand Logo — black squircle */}
         <a

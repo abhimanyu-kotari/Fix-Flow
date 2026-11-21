@@ -139,22 +139,27 @@ export default function ShopWorkspace({
   }, [tickets]);
 
   return (
-    <div id="shop-view-container" className="workspace-container">
+    <div 
+      id="shop-view-container" 
+      className={`relative w-full overflow-hidden min-h-[calc(100vh-3.5rem)] ${sidebarCollapsed ? 'workspace-sidebar-collapsed' : ''}`}
+    >
       {/* 1: WORKSPACE SIDEBAR NAVIGATION */}
       <aside 
-        id="shop-workspace-sidebar" 
-        className={`workspace-sidebar ${sidebarCollapsed ? 'workspace-sidebar-collapsed' : ''}`}
+        id="workspace-sidebar" 
+        className="workspace-sidebar"
+        aria-label="Workspace navigation"
       >
         {/* Toggle Collapse */}
         <button 
+          id="workspace-sidebar-toggle"
           type="button" 
-          className="workspace-sidebar-toggle"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
           title="Toggle Sidebar"
           aria-label="Toggle Sidebar"
+          aria-expanded={!sidebarCollapsed}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3 6h18M3 12h18M3 18h18" />
+            <path d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
 
@@ -286,27 +291,28 @@ export default function ShopWorkspace({
       </aside>
 
       {/* 2: MAIN DASHBOARD CONTENT CONTAINER */}
-      <div id="shop-workspace-dashboard" className="max-w-7xl">
-        
-        {/* TAB 1: WORKSPACE OVERVIEW */}
-        {activeTab === 'overview' && (
-          <section id="workspace-overview-panel" className="workspace-page-panel is-active" style={{ display: 'block' }}>
-            
-            {/* Header: Eyebrow, Title, Subtitle & Action */}
-            <div className="workspace-page-header">
-              <div>
-                <span className="workspace-eyebrow">{t('ws_overview_eyebrow')}</span>
-                <h1>{t('ws_overview_title')}</h1>
-                <p>{t('ws_overview_subtitle')}</p>
+      <div className="max-w-7xl mx-auto space-y-8 relative z-10">
+        <div id="shop-workspace-dashboard" className="space-y-8">
+          
+          {/* TAB 1: WORKSPACE OVERVIEW */}
+          {activeTab === 'overview' && (
+            <section id="workspace-overview-panel" className="workspace-page-panel is-active" style={{ display: 'block' }}>
+              
+              {/* Header: Eyebrow, Title, Subtitle & Action */}
+              <div className="workspace-page-header">
+                <div>
+                  <span className="workspace-eyebrow">{t('ws_overview_eyebrow')}</span>
+                  <h1>{t('ws_overview_title')}</h1>
+                  <p>{t('ws_overview_subtitle')}</p>
+                </div>
+                <button 
+                  type="button" 
+                  className="workspace-primary-action cursor-pointer hover:opacity-90 transition"
+                  onClick={onOpenNewTicketModal}
+                >
+                  <span>+</span> {t('ws_new_intake_btn').replace(/^\+\s*/, '')}
+                </button>
               </div>
-              <button 
-                type="button" 
-                className="workspace-primary-action cursor-pointer hover:opacity-90 transition"
-                onClick={onOpenNewTicketModal}
-              >
-                <span>+</span> {t('ws_new_intake_btn')}
-              </button>
-            </div>
 
             {/* 4 Metric KPI Widgets */}
             <div className="workspace-stat-grid">
@@ -482,7 +488,7 @@ export default function ShopWorkspace({
                 onClick={onOpenNewTicketModal}
                 className="workspace-primary-action cursor-pointer hover:opacity-90 transition"
               >
-                <span>+</span> {t('ws_new_intake_btn')}
+                <span>+</span> {t('ws_new_intake_btn').replace(/^\+\s*/, '')}
               </button>
             </div>
 
@@ -717,7 +723,7 @@ export default function ShopWorkspace({
                 onClick={onOpenAddStaffModal}
                 className="workspace-primary-action cursor-pointer hover:opacity-90 transition"
               >
-                <span>+</span> {t('ws_invite_staff')}
+                <span>+</span> {t('ws_invite_staff').replace(/^\+\s*/, '')}
               </button>
             </div>
 
@@ -865,6 +871,7 @@ export default function ShopWorkspace({
           </div>
         )}
 
+        </div>
       </div>
     </div>
   );
