@@ -31,8 +31,8 @@ router.get('/', async (req, res) => {
  */
 router.post('/change-plan', requireRole('OWNER'), async (req, res) => {
   try {
-    const { planId } = req.body;
-    const result = await updateWorkspacePlan(req.workspaceId, req.user, planId);
+    const { planId, autoDeactivateExcessStaff } = req.body;
+    const result = await updateWorkspacePlan(req.workspaceId, req.user, planId, { autoDeactivateExcessStaff });
     res.json({
       success: true,
       message: `Workspace subscription successfully updated to ${result.currentPlan.name}.`,

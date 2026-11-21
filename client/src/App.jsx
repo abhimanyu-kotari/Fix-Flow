@@ -390,7 +390,7 @@ export default function App() {
   };
 
   // Plan switch
-  const handleSwitchPlan = async (targetPlanId) => {
+  const handleSwitchPlan = async (targetPlanId, options = {}) => {
     try {
       let token = shopToken;
       if (!token) {
@@ -409,13 +409,26 @@ export default function App() {
         setWorkspace(ws);
         setPortal('shop');
       }
-      const data = await api.switchPlan(targetPlanId, token);
+      const data = await api.switchPlan(targetPlanId, token, options);
       setSubscription(data);
+      if (data?.currentPlan) {
+        setWorkspace(prev => {
+          const updated = {
+            ...(prev || {}),
+            planId: data.currentPlan.id,
+            plan: data.currentPlan
+          };
+          localStorage.setItem('ff_workspace', JSON.stringify(updated));
+          return updated;
+        });
+      }
       const planName = data?.currentPlan?.name || data?.subscription?.plan?.name || targetPlanId.toUpperCase();
       showToast(`Workspace plan switched to ${planName}!`, 'success');
       await loadShopData(token);
+      return data;
     } catch (err) {
       showToast(err.message, 'error');
+      throw err;
     }
   };
 

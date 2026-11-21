@@ -52,7 +52,8 @@ async function getWorkspaceSubscription(workspaceId) {
   };
 }
 
-async function updateWorkspacePlan(workspaceId, operatorUser, targetPlanId) {
+async function updateWorkspacePlan(workspaceId, operatorUser, targetPlanId, options = {}) {
+  const { autoDeactivateExcessStaff = false } = options;
   if (!operatorUser || operatorUser.role !== 'OWNER') {
     throw new Error('Unauthorized: Only the shop owner can manage workspace subscriptions.');
   }
@@ -67,9 +68,21 @@ async function updateWorkspacePlan(workspaceId, operatorUser, targetPlanId) {
   const currentStaffCount = await User.countDocuments({ workspace: workspaceId, isActive: true });
 
   if (currentStaffCount > targetPlan.maxStaff) {
-    throw new Error(
-      `Cannot switch to ${targetPlan.name} plan: Workspace currently has ${currentStaffCount} active staff member(s), but ${targetPlan.name} allows a maximum of ${targetPlan.maxStaff}. Please deactivate excess staff accounts first.`
-    );
+    if (autoDeactivateExcessStaff) {
+      // Keep owner active, deactivate excess staff accounts
+      const nonOwners = await User.find({ workspace: workspaceId, role: { $ne: 'OWNER' }, isActive: true }).sort({ createdAt: -1 });
+      let excess = currentStaffCount - targetPlan.maxStaff;
+      for (const staffMember of nonOwners) {
+        if (excess <= 0) break;
+        staffMember.isActive = false;
+        await staffMember.save();
+        excess--;
+      }
+    } else {
+      throw new Error(
+        `Cannot switch to ${targetPlan.name} plan: Workspace currently has ${currentStaffCount} active staff member(s), but ${targetPlan.name} allows a maximum of ${targetPlan.maxStaff}. Please deactivate excess staff accounts first.`
+      );
+    }
   }
 
   await Subscription.findOneAndUpdate(

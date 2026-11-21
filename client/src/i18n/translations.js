@@ -108,6 +108,7 @@ export const translations = {
     popular_badge: 'Popular',
     current_plan: 'Current Plan',
     upgrade_to: 'Upgrade to {plan}',
+    downgrade_to: 'Switch to {plan}',
     mo: '/mo',
 
     // Workspace
@@ -293,6 +294,7 @@ export const translations = {
     popular_badge: 'ಜನಪ್ರಿಯ',
     current_plan: 'ಪ್ರಸ್ತುತ ಯೋಜನೆ',
     upgrade_to: '{plan} ಯೋಜನೆಗೆ ಅಪ್‌ಗ್ರೇಡ್ ಮಾಡಿ',
+    downgrade_to: '{plan} ಯೋಜನೆಗೆ ಬದಲಾಯಿಸಿ',
     mo: '/ತಿಂಗಳು',
 
     // Workspace
@@ -478,6 +480,7 @@ export const translations = {
     popular_badge: 'लोकप्रिय',
     current_plan: 'वर्तमान प्लान',
     upgrade_to: '{plan} पर अपग्रेड करें',
+    downgrade_to: '{plan} पर स्विच करें',
     mo: '/माह',
 
     // Workspace
@@ -654,6 +657,7 @@ export const translations = {
     popular_badge: 'పాపులర్',
     current_plan: 'ప్రస్తుత ప్లాన్',
     upgrade_to: '{plan} కు అప్‌గ్రేడ్ అవ్వండి',
+    downgrade_to: '{plan} కు మారండి',
     mo: '/నెలకు',
 
     // Workspace
@@ -819,6 +823,7 @@ export const translations = {
     popular_badge: 'பிரபலமானது',
     current_plan: 'தற்போதைய திட்டம்',
     upgrade_to: '{plan} திட்டத்திற்கு மேம்படுத்துக',
+    downgrade_to: '{plan} திட்டத்திற்கு மாறுக',
     mo: '/மாதம்',
 
     // Workspace
@@ -971,6 +976,7 @@ export const translations = {
     popular_badge: 'ജനപ്രിയം',
     current_plan: 'നിലവിലെ പ്ലാൻ',
     upgrade_to: '{plan} പ്ലാനിലേക്ക് അപ്‌ഗ്രേഡ് ചെയ്യുക',
+    downgrade_to: '{plan} പ്ലാനിലേക്ക് മാറുക',
     mo: '/മാസം',
 
     // Workspace
@@ -1123,6 +1129,7 @@ export const translations = {
     popular_badge: 'लोकप्रिय',
     current_plan: 'सध्याची योजना',
     upgrade_to: '{plan} वर अपग्रेड करा',
+    downgrade_to: '{plan} वर स्विच करा',
     mo: '/महिना',
 
     // Workspace
@@ -1275,6 +1282,7 @@ export const translations = {
     popular_badge: 'জনপ্রিয়',
     current_plan: 'বর্তমান পরিকল্পনা',
     upgrade_to: '{plan} এ আপগ্রেড করুন',
+    downgrade_to: '{plan} এ স্যুইচ করুন',
     mo: '/মাস',
 
     // Workspace
@@ -1427,6 +1435,7 @@ export const translations = {
     popular_badge: 'લોકપ્રિય',
     current_plan: 'વર્તમાન યોજના',
     upgrade_to: '{plan} માં અપગ્રેડ કરો',
+    downgrade_to: '{plan} માં સ્વિચ કરો',
     mo: '/મહિને',
 
     // Workspace
@@ -1579,6 +1588,7 @@ export const translations = {
     popular_badge: 'ਪ੍ਰਸਿੱਧ',
     current_plan: 'ਮੌਜੂਦਾ ਯੋਜਨਾ',
     upgrade_to: '{plan} ਵਿੱਚ ਅਪਗ੍ਰੇਡ ਕਰੋ',
+    downgrade_to: '{plan} ਵਿੱਚ ਸਵਿੱਚ ਕਰੋ',
     mo: '/ਮਹੀਨਾ',
 
     // Workspace
@@ -1731,6 +1741,7 @@ export const translations = {
     popular_badge: 'ଲୋକପ୍ରିୟ',
     current_plan: 'ବର୍ତ୍ତମାନର ଯୋଜନା',
     upgrade_to: '{plan} କୁ ଅପଗ୍ରେଡ୍ କରନ୍ତୁ',
+    downgrade_to: '{plan} କୁ ସୁଇଚ୍ କରନ୍ତୁ',
     mo: '/ମାସ',
 
     // Workspace
@@ -1883,6 +1894,7 @@ export const translations = {
     popular_badge: 'مقبول',
     current_plan: 'موجودہ منصوبہ',
     upgrade_to: '{plan} میں اپ گریڈ کریں',
+    downgrade_to: '{plan} میں سوئچ کریں',
     mo: '/ماہانہ',
 
     // Workspace

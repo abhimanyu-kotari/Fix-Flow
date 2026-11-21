@@ -73,9 +73,12 @@ export const api = {
   getSubscription: (token) =>
     apiRequest('/subscription', { method: 'GET' }, token),
 
-  // App.jsx calls: api.switchPlan(targetPlanId, shopToken)
-  switchPlan: (planId, token) =>
-    apiRequest('/subscription/change-plan', { method: 'POST', body: JSON.stringify({ planId }) }, token),
+  // App.jsx calls: api.switchPlan(targetPlanId, shopToken, options)
+  switchPlan: (planId, token, options = {}) =>
+    apiRequest('/subscription/change-plan', { 
+      method: 'POST', 
+      body: JSON.stringify({ planId, ...options }) 
+    }, token),
 
   // ── Tickets ───────────────────────────────────────────────────────────
   // App.jsx calls: api.getTickets(token)
