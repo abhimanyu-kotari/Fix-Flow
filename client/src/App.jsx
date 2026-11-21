@@ -14,22 +14,67 @@ import CustomerPortal from './components/CustomerPortal';
 import { api } from './utils/api';
 
 export default function App() {
-  const [portal, setPortal] = useState('shop'); // 'shop' | 'track'
+  // Persist portal selection so page reload stays on the current portal
+  const [portal, setPortal] = useState(() => {
+    const saved = localStorage.getItem('ff_portal');
+    if (saved === 'shop' || saved === 'track') return saved;
+    if (localStorage.getItem('ff_shop_token')) return 'shop';
+    if (localStorage.getItem('ff_cust_token')) return 'track';
+    return 'shop';
+  });
+
   const [toasts, setToasts] = useState([]);
 
-  // Shop state
+  // Shop state — persisted in localStorage to survive page refreshes
   const [shopToken, setShopToken] = useState(() => localStorage.getItem('ff_shop_token') || '');
-  const [workspace, setWorkspace] = useState(null);
-  const [repairerProfile, setRepairerProfile] = useState(null);
+  const [workspace, setWorkspace] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ff_workspace');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [repairerProfile, setRepairerProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ff_repairer_profile');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [tickets, setTickets] = useState([]);
   const [staff, setStaff] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [subscription, setSubscription] = useState(null);
 
-  // Customer state
+  // Customer state — persisted in localStorage to survive page refreshes
   const [customerToken, setCustomerToken] = useState(() => localStorage.getItem('ff_cust_token') || '');
-  const [customerProfile, setCustomerProfile] = useState(null);
+  const [customerProfile, setCustomerProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ff_cust_profile');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [customerTickets, setCustomerTickets] = useState([]);
+
+  // Session verification state (only true if token exists but cached workspace is missing)
+  const [authVerifying, setAuthVerifying] = useState(() => {
+    const hasShop = Boolean(localStorage.getItem('ff_shop_token'));
+    const hasShopData = Boolean(localStorage.getItem('ff_workspace'));
+    const hasCust = Boolean(localStorage.getItem('ff_cust_token'));
+    const hasCustData = Boolean(localStorage.getItem('ff_cust_profile'));
+    if (hasShop && !hasShopData) return true;
+    if (hasCust && !hasCustData) return true;
+    return false;
+  });
+
+  const handleSwitchPortal = useCallback((newPortal) => {
+    setPortal(newPortal);
+    localStorage.setItem('ff_portal', newPortal);
+  }, []);
 
   // Modals
   const [newTicketModalOpen, setNewTicketModalOpen] = useState(false);
@@ -53,63 +98,109 @@ export default function App() {
   // Fetch shop dashboard data
   const loadShopData = useCallback(async (token) => {
     const currentToken = token || shopToken;
-    if (!currentToken) return;
+    if (!currentToken) {
+      setAuthVerifying(false);
+      return;
+    }
 
     try {
-      // Load workspace
-      const wsData = await api.getWorkspace(currentToken);
-      setWorkspace(prev => ({ ...(wsData.workspace || {}), role: prev?.role || 'OWNER' }));
+      // 1. Load workspace and profile in parallel
+      const [wsResult, profResult] = await Promise.allSettled([
+        api.getWorkspace(currentToken),
+        api.getProfile(currentToken)
+      ]);
 
-      // Load profile
-      const profData = await api.getProfile(currentToken);
-      if (profData.user) {
-        setRepairerProfile(profData.user);
-        setWorkspace(prev => ({ ...(prev || {}), role: profData.user.role }));
+      // If workspace request failed due to authentication (401), clear session
+      if (wsResult.status === 'rejected') {
+        const err = wsResult.reason;
+        const msg = (err?.message || '').toLowerCase();
+        if (msg.includes('authentication required') || msg.includes('expired') || msg.includes('401') || msg.includes('access denied')) {
+          handleShopLogout();
+          return;
+        }
       }
 
-      // Load tickets
-      const tkData = await api.getTickets(currentToken);
-      setTickets(tkData.tickets || []);
+      if (wsResult.status === 'fulfilled' && wsResult.value?.workspace) {
+        const ws = wsResult.value.workspace;
+        setWorkspace(prev => {
+          const updated = { ...(ws || {}), role: prev?.role || 'OWNER' };
+          localStorage.setItem('ff_workspace', JSON.stringify(updated));
+          return updated;
+        });
+      }
 
-      // Load staff
-      const stData = await api.getStaff(currentToken);
-      setStaff(stData.staff || []);
+      if (profResult.status === 'fulfilled' && profResult.value?.user) {
+        const usr = profResult.value.user;
+        setRepairerProfile(usr);
+        localStorage.setItem('ff_repairer_profile', JSON.stringify(usr));
+        setWorkspace(prev => {
+          const updated = { ...(prev || {}), role: usr.role };
+          localStorage.setItem('ff_workspace', JSON.stringify(updated));
+          return updated;
+        });
+      }
 
-      // Load customers
-      const csData = await api.getCustomers(currentToken);
-      setCustomers(csData.customers || []);
+      // 2. Load auxiliary dashboard metrics in parallel (isolated so any network glitch doesn't log the user out)
+      const [tkRes, stRes, csRes, subRes] = await Promise.allSettled([
+        api.getTickets(currentToken),
+        api.getStaff(currentToken),
+        api.getCustomers(currentToken),
+        api.getSubscription(currentToken)
+      ]);
 
-      // Load subscription
-      const subData = await api.getSubscription(currentToken);
-      setSubscription(subData);
+      if (tkRes.status === 'fulfilled') setTickets(tkRes.value?.tickets || []);
+      if (stRes.status === 'fulfilled') setStaff(stRes.value?.staff || []);
+      if (csRes.status === 'fulfilled') setCustomers(csRes.value?.customers || []);
+      if (subRes.status === 'fulfilled') setSubscription(subRes.value);
+
     } catch (err) {
-      if (err.message && (err.message.includes('Authentication') || err.message.includes('expired') || err.message.includes('invalid') || err.message.includes('token'))) {
-        localStorage.removeItem('ff_shop_token');
-        setShopToken('');
-        setWorkspace(null);
-        setRepairerProfile(null);
+      const msg = (err?.message || '').toLowerCase();
+      if (msg.includes('authentication required') || msg.includes('expired') || msg.includes('401')) {
+        handleShopLogout();
       }
+    } finally {
+      setAuthVerifying(false);
     }
   }, [shopToken]);
 
   // Fetch customer dashboard data
   const loadCustomerData = useCallback(async (token) => {
     const currentToken = token || customerToken;
-    if (!currentToken) return;
+    if (!currentToken) {
+      setAuthVerifying(false);
+      return;
+    }
 
     try {
-      const profData = await api.getCustomerProfile(currentToken);
-      setCustomerProfile(profData.customer);
+      const [profRes, tkRes] = await Promise.allSettled([
+        api.getCustomerProfile(currentToken),
+        api.getCustomerTickets(currentToken)
+      ]);
 
-      const tkData = await api.getCustomerTickets(currentToken);
-      setCustomerTickets(tkData.tickets || []);
-    } catch (err) {
-      if (err.message && (err.message.includes('Authentication') || err.message.includes('expired') || err.message.includes('invalid') || err.message.includes('token'))) {
-        localStorage.removeItem('ff_cust_token');
-        setCustomerToken('');
-        setCustomerProfile(null);
-        setCustomerTickets([]);
+      if (profRes.status === 'rejected') {
+        const err = profRes.reason;
+        const msg = (err?.message || '').toLowerCase();
+        if (msg.includes('authentication required') || msg.includes('expired') || msg.includes('401')) {
+          handleCustomerLogout();
+          return;
+        }
       }
+
+      if (profRes.status === 'fulfilled' && profRes.value?.customer) {
+        setCustomerProfile(profRes.value.customer);
+        localStorage.setItem('ff_cust_profile', JSON.stringify(profRes.value.customer));
+      }
+
+      if (tkRes.status === 'fulfilled') {
+        setCustomerTickets(tkRes.value?.tickets || []);
+      }
+    } catch (err) {
+      const msg = (err?.message || '').toLowerCase();
+      if (msg.includes('authentication required') || msg.includes('expired') || msg.includes('401')) {
+        handleCustomerLogout();
+      }
+    } finally {
+      setAuthVerifying(false);
     }
   }, [customerToken]);
 
@@ -126,11 +217,19 @@ export default function App() {
   // Shop Auth Handlers
   const handleShopLogin = async (email, password) => {
     const data = await api.shopLogin(email, password);
+    const ws = { ...data.workspace, role: data.user?.role || 'OWNER' };
     localStorage.setItem('ff_shop_token', data.token);
+    localStorage.setItem('ff_workspace', JSON.stringify(ws));
+    if (data.user) {
+      localStorage.setItem('ff_repairer_profile', JSON.stringify(data.user));
+    }
+    localStorage.setItem('ff_portal', 'shop');
+
     setShopToken(data.token);
     setRepairerProfile(data.user);
-    setWorkspace({ ...data.workspace, role: data.user?.role || 'OWNER' });
+    setWorkspace(ws);
     setPortal('shop');
+    setAuthVerifying(false);
     showToast(`Welcome back, ${data.user?.name || data.workspace?.name}!`, 'success');
     await loadShopData(data.token);
   };
@@ -144,11 +243,19 @@ export default function App() {
       shopPhone: payload.phone || payload.shopPhone,
       shopAddress: payload.address || payload.shopAddress
     });
+    const ws = { ...data.workspace, role: data.user?.role || 'OWNER' };
     localStorage.setItem('ff_shop_token', data.token);
+    localStorage.setItem('ff_workspace', JSON.stringify(ws));
+    if (data.user) {
+      localStorage.setItem('ff_repairer_profile', JSON.stringify(data.user));
+    }
+    localStorage.setItem('ff_portal', 'shop');
+
     setShopToken(data.token);
     setRepairerProfile(data.user);
-    setWorkspace({ ...data.workspace, role: data.user?.role || 'OWNER' });
+    setWorkspace(ws);
     setPortal('shop');
+    setAuthVerifying(false);
     showToast(`Workspace ${data.workspace?.name || 'created'} successfully!`, 'success');
     await loadShopData(data.token);
   };
@@ -156,11 +263,19 @@ export default function App() {
   const handleDemoLogin = async () => {
     try {
       const data = await api.demoLogin();
+      const ws = { ...data.workspace, role: data.user?.role || 'OWNER' };
       localStorage.setItem('ff_shop_token', data.token);
+      localStorage.setItem('ff_workspace', JSON.stringify(ws));
+      if (data.user) {
+        localStorage.setItem('ff_repairer_profile', JSON.stringify(data.user));
+      }
+      localStorage.setItem('ff_portal', 'shop');
+
       setShopToken(data.token);
       setRepairerProfile(data.user);
-      setWorkspace({ ...data.workspace, role: data.user?.role || 'OWNER' });
+      setWorkspace(ws);
       setPortal('shop');
+      setAuthVerifying(false);
       showToast('Signed in to Live Demo Shop Workspace!', 'success');
       await loadShopData(data.token);
     } catch (err) {
@@ -170,6 +285,8 @@ export default function App() {
 
   const handleShopLogout = () => {
     localStorage.removeItem('ff_shop_token');
+    localStorage.removeItem('ff_workspace');
+    localStorage.removeItem('ff_repairer_profile');
     setShopToken('');
     setWorkspace(null);
     setRepairerProfile(null);
@@ -177,6 +294,7 @@ export default function App() {
     setStaff([]);
     setCustomers([]);
     setSubscription(null);
+    setAuthVerifying(false);
     showToast('Signed out of shop workspace', 'info');
   };
 
@@ -184,9 +302,13 @@ export default function App() {
   const handleCustomerLogin = async (phone, password) => {
     const data = await api.customerLogin(phone, password);
     localStorage.setItem('ff_cust_token', data.token);
+    localStorage.setItem('ff_cust_profile', JSON.stringify(data.customer));
+    localStorage.setItem('ff_portal', 'track');
+
     setCustomerToken(data.token);
     setCustomerProfile(data.customer);
     setPortal('track');
+    setAuthVerifying(false);
     showToast(`Welcome, ${data.customer.name}!`, 'success');
     await loadCustomerData(data.token);
   };
@@ -194,18 +316,24 @@ export default function App() {
   const handleCustomerRegister = async (payload) => {
     const data = await api.customerRegister(payload);
     localStorage.setItem('ff_cust_token', data.token);
+    localStorage.setItem('ff_cust_profile', JSON.stringify(data.customer));
+    localStorage.setItem('ff_portal', 'track');
+
     setCustomerToken(data.token);
     setCustomerProfile(data.customer);
     setPortal('track');
+    setAuthVerifying(false);
     showToast(`Account created for ${data.customer.phone}!`, 'success');
     await loadCustomerData(data.token);
   };
 
   const handleCustomerLogout = () => {
     localStorage.removeItem('ff_cust_token');
+    localStorage.removeItem('ff_cust_profile');
     setCustomerToken('');
     setCustomerProfile(null);
     setCustomerTickets([]);
+    setAuthVerifying(false);
     showToast('Signed out of repair tracking', 'info');
   };
 
@@ -267,11 +395,18 @@ export default function App() {
       let token = shopToken;
       if (!token) {
         const demo = await api.demoLogin();
+        const ws = { ...demo.workspace, role: demo.user?.role || 'OWNER' };
         localStorage.setItem('ff_shop_token', demo.token);
+        localStorage.setItem('ff_workspace', JSON.stringify(ws));
+        if (demo.user) {
+          localStorage.setItem('ff_repairer_profile', JSON.stringify(demo.user));
+        }
+        localStorage.setItem('ff_portal', 'shop');
+
         setShopToken(demo.token);
         token = demo.token;
         setRepairerProfile(demo.user);
-        setWorkspace({ ...demo.workspace, role: demo.user?.role || 'OWNER' });
+        setWorkspace(ws);
         setPortal('shop');
       }
       const data = await api.switchPlan(targetPlanId, token);
@@ -295,8 +430,8 @@ export default function App() {
     }
   };
 
-  const isShopActive = portal === 'shop' && shopToken && workspace;
-  const isCustActive = portal === 'track' && customerToken;
+  const isShopActive = portal === 'shop' && Boolean(shopToken && workspace);
+  const isCustActive = portal === 'track' && Boolean(customerToken && customerProfile);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#05070B] text-white selection:bg-sky-500 selection:text-white">
@@ -313,13 +448,20 @@ export default function App() {
         customerSession={customerProfile}
         onShopLogout={handleShopLogout}
         onCustomerLogout={handleCustomerLogout}
-        onSwitchPortal={setPortal}
+        onSwitchPortal={handleSwitchPortal}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 w-full mx-auto">
         {/* VIEW 1: SHOP WORKSPACE DASHBOARD */}
-        {isShopActive ? (
+        {authVerifying ? (
+          <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-black border border-white/20 flex items-center justify-center font-black text-white text-lg animate-pulse shadow-xl shadow-black/50">
+              FF
+            </div>
+            <p className="text-xs text-slate-400 font-medium tracking-wide animate-pulse">Restoring your workspace session...</p>
+          </div>
+        ) : isShopActive ? (
           <ShopWorkspace 
             workspace={workspace}
             repairer={repairerProfile}
@@ -348,7 +490,7 @@ export default function App() {
           <div id="public-portal-gateway" className="w-full space-y-16">
             <HeroGateway 
               portal={portal}
-              onSwitchPortal={setPortal}
+              onSwitchPortal={handleSwitchPortal}
               onShopLogin={handleShopLogin}
               onShopRegister={handleShopRegister}
               onDemoLogin={handleDemoLogin}
@@ -359,10 +501,10 @@ export default function App() {
             <FeaturesSection />
             <ShowcaseSection 
               onTryDemo={handleDemoLogin} 
-              onSwitchPortal={setPortal}
+              onSwitchPortal={handleSwitchPortal}
             />
             <PricingSection 
-              onSwitchPortal={setPortal}
+              onSwitchPortal={handleSwitchPortal}
               onSelectPlan={() => {
                 const el = document.getElementById('public-portal-gateway');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -376,7 +518,7 @@ export default function App() {
       </main>
 
       {/* Footer (Only rendered on public landing page) */}
-      {!isShopActive && !isCustActive && <Footer onSwitchPortal={setPortal} />}
+      {!authVerifying && !isShopActive && !isCustActive && <Footer onSwitchPortal={handleSwitchPortal} />}
 
       {/* Modals */}
       <NewTicketModal 
