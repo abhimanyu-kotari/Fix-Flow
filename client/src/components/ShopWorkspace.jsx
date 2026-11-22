@@ -24,7 +24,7 @@ const PLANS_DATA = [
       { text: '30 Repair Tickets / month', included: true },
       { text: '1 Workshop Owner Account', included: true },
       { text: 'Live Customer Repair Tracking Portal', included: true },
-      { text: 'Full Multilingual Support (12 Languages)', included: true },
+      { text: 'Regional Multilingual Support (5 Languages)', included: true },
       { text: 'Repair Status History & Audit Trail', included: true },
       { text: 'Customer Phone Deduplication', included: true },
       { text: 'SMS & WhatsApp Notifications', included: false },
@@ -33,7 +33,7 @@ const PLANS_DATA = [
     ],
     highlights: [
       'Zero cost forever for independent repairers and solo technicians',
-      'Full access to the 12-language multilingual customer tracking system'
+      'Full access to the 5-language regional customer tracking system'
     ]
   },
   {
@@ -49,7 +49,7 @@ const PLANS_DATA = [
       { text: 'Unlimited Repair Tickets', included: true },
       { text: 'Up to 3 Staff Member Seats', included: true },
       { text: 'Live Customer Repair Tracking Portal', included: true },
-      { text: 'Full Multilingual Support (12 Languages)', included: true },
+      { text: 'Regional Multilingual Support (5 Languages)', included: true },
       { text: 'SMS & WhatsApp Customer Alerts', included: true },
       { text: 'Repair Estimates & Invoicing', included: true },
       { text: 'Basic Workshop Analytics & Reports', included: true },

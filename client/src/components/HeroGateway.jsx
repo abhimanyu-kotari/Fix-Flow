@@ -566,7 +566,7 @@ export default function HeroGateway({
                   </div>
 
                   <div className="bg-zinc-100 p-3 rounded-xl border border-zinc-200 text-[11px] text-zinc-800">
-                    <span><strong>Zero-OTP Access:</strong> Set a password once and access all your device repair timelines anytime.</span>
+                    <span><strong>Secure Verified Access:</strong> Authenticate with your verified phone number to inspect your live repair milestones anytime.</span>
                   </div>
 
                   <button
