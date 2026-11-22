@@ -36,6 +36,30 @@
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
     .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Anti-translation and extension defense */
+    .immersive-translate-target-wrapper,
+    .immersive-translate-target,
+    .immersive-translate-text,
+    [data-immersive-translate-walked],
+    [class*="immersive-translate"],
+    .goog-te-banner-frame,
+    .goog-te-balloon-frame,
+    #goog-gt-tt,
+    .goog-tooltip,
+    font:has(font),
+    font[color],
+    font[style*="vertical-align"],
+    span[class*="translation"],
+    div[class*="translation-subtext"] {
+      display: none !important;
+      visibility: hidden !important;
+      height: 0 !important;
+      width: 0 !important;
+      opacity: 0 !important;
+      position: absolute !important;
+      pointer-events: none !important;
+    }
     @keyframes hero-line-write {
       0% { clip-path: inset(0 100% 0 0); }
       100% { clip-path: inset(0 0 0 0); }
